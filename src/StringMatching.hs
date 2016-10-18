@@ -17,7 +17,7 @@
 {-@ infix <+> @-}
 {-@ infix <>  @-}
 
-module StringIndexing where
+module StringMatching where
 
 #define CheckAll
 #define ParallelEvaluation
