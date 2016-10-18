@@ -1,0 +1,181 @@
+{-# LANGUAGE CPP                 #-}
+
+#ifdef MainCall
+#else  
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE DeriveTraversable   #-}
+{-# LANGUAGE CPP                 #-}
+
+{-@ LIQUID "--higherorder"         @-}
+{-@ LIQUID "--totality"            @-}
+{-@ LIQUID "--exactdc"             @-}
+{-@ LIQUID "--no-measure-fields"   @-}
+{-@ LIQUID "--trust-internals"     @-}
+
+{-@ infix <+> @-}
+{-@ infix <>  @-}
+
+import RString.RString
+import Language.Haskell.Liquid.ProofCombinators 
+
+import Data.Proxy 
+import GHC.TypeLits
+
+import Prelude hiding ( mempty, mappend, id, mconcat, map
+                      , take, drop  
+                      , error, undefined 
+                      )
+#include "RList.hs"
+#include "StringMatching.hs"
+
+#include "ListMonoidLemmata.hs"
+#include "CastLemmata.hs"
+#include "EmptyLemmata.hs"
+#include "ListLemmata.hs"
+#include "ShiftingLemmata.hs"
+
+#define CheckMonoidAssoc
+#endif
+
+{-@ mappend_assoc :: x:SM target -> y:SM target -> z:SM target -> { x <> (y <> z) = (x <> y) <> z} @-}
+mappend_assoc
+     :: forall (target :: Symbol). (KnownSymbol target) 
+     => SM target ->  SM target ->  SM target -> Proof
+
+#ifdef CheckMonoidAssoc 
+
+mappend_assoc x@(SM xi xis) y@(SM yi yis) z@(SM zi zis)
+  =   x <> (y <> z)
+  ==. (SM xi xis) <> ((SM yi yis) <> (SM zi zis))
+  ==. (SM xi xis) <> (SM (yi <+> zi) (yzileft `append` yzinew `append` yziright)) 
+  ==. SM input (is1left `append` is2left `append` (map (shiftStringRight tg xi (yi <+> zi)) yzi))
+      ? concatStringAssoc xi yi zi 
+  ==. SM input (is1left `append` is2left `append` (map (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) `append` is5left))
+      ? mapAppend (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) yziright 
+  ==. SM input (is1left `append` is2left `append` (is3left `append` is4left `append` is5left))
+      ? mapAppend (shiftStringRight tg xi (yi <+> zi)) yzileft yzinew 
+  ==. SM input (is1left `append` ((is2left `append` is3left `append` is4left) `append` is5left))
+      ? appendGroup is1left is2left is3left is4left is5left
+  ==. SM input (is1left `append` ((is2right `append` is3right `append` is4right) `append` is5left))
+      ? assocNewIndices y tg xi yi zi yis
+  ==. SM input (is1right `append` ((is2right `append` is3right `append` is4right) `append` is5right))
+      ? (castConcat tg xi yi zi xis &&& mapLenFusion tg xi yi zi zis)
+  ==. SM input ((is1right `append` is2right) `append` is3right `append` is4right `append` is5right)
+      ? appendUnGroup is1right is2right is3right is4right is5right
+  ==. SM input ((map (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew)) `append` is3right `append` is4right `append` is5right)
+      ? mapAppend (castGoodIndexRight tg (xi <+> yi) zi) xyileft xyinew
+  ==. SM input ((map (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew `append` xyiright)) `append` is4right `append` is5right)
+      ? mapAppend (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew) xyiright
+  ==. (SM (xi <+> yi) (xyileft `append` xyinew `append` xyiright)) <> (SM zi zis)
+  ==. ((SM xi xis) <> (SM yi yis)) <> (SM zi zis)
+  *** QED 
+  where
+        tg         = fromString (symbolVal (Proxy :: Proxy target))
+        yzileft    = map (castGoodIndexRight tg yi zi) yis
+        yzinew     = makeNewIndices yi zi tg
+        yziright   = map (shiftStringRight tg yi zi) zis
+        yzi        = yzileft `append` yzinew `append` yziright
+        xyzi       = is1left `append` is2left `append` xyiright
+
+        is1left    = map (castGoodIndexRight tg xi (yi <+> zi)) xis
+
+        is2left    = makeNewIndices xi (yi <+> zi) tg
+        is3left    = map (shiftStringRight tg xi (yi <+> zi)) yzileft
+        is4left    = map (shiftStringRight tg xi (yi <+> zi)) yzinew
+
+        is5left    = map (shiftStringRight tg xi (yi <+> zi)) yziright
+
+        is1right   = map (castGoodIndexRight tg (xi <+> yi) zi) xyileft
+        is2right   = map (castGoodIndexRight tg (xi <+> yi) zi) xyinew
+        is3right   = map (castGoodIndexRight tg (xi <+> yi) zi) xyiright
+        is4right   = makeNewIndices (xi <+> yi) zi tg
+        is5right   = map (shiftStringRight tg (xi <+> yi) zi) zis
+
+        xyileft    = map (castGoodIndexRight tg xi yi) xis
+        xyinew     = makeNewIndices xi yi tg
+        xyiright   = map (shiftStringRight tg xi yi) yis
+
+        input      = xi <+> (yi <+> zi)
+
+
+
+
+
+{-@ inline makeIs2left @-}
+{-@ inline makeIs3left @-}
+{-@ inline makeIs4left @-}
+
+makeIs2left tg xi yi zi = makeNewIndices xi (yi <+> zi) tg
+{-@ makeIs3left :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> List (GoodIndex yi tg) -> List Int @-} 
+makeIs3left :: RString -> RString -> RString -> RString -> List Int -> List Int 
+makeIs3left tg xi yi zi yis   
+  = map (shiftStringRight tg xi (yi <+> zi)) (map (castGoodIndexRight tg yi zi) yis)
+makeIs4left tg xi yi zi     
+  = map (shiftStringRight tg xi (yi <+> zi)) (makeNewIndices yi zi tg)
+
+
+{-@ inline makeIs3right @-}
+{-@ inline makeIs4right @-}
+{-@ inline makeIs2right @-}
+makeIs2right tg xi yi zi = map (castGoodIndexRight tg (xi <+> yi) zi) (makeNewIndices xi yi tg) 
+{-@ makeIs3right :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> List (GoodIndex yi tg) -> List Int @-} 
+makeIs3right tg xi yi zi yis   
+  = map (castGoodIndexRight tg (xi <+> yi) zi) (map (shiftStringRight tg xi yi) yis)
+makeIs4right tg xi yi zi     
+  = makeNewIndices (xi <+> yi) zi tg
+
+
+
+assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) => 
+  SM target -> RString -> RString -> RString -> RString -> List Int -> Proof
+{-@ assocNewIndices :: y:SM target -> tg:{RString | tg == target} -> xi:RString 
+   -> yi:{RString | yi == inputSM y} 
+   -> zi:RString 
+   -> yis:{List (GoodIndex (inputSM y) tg) | yis == indicesSM y }  
+   -> { append (append (makeIs2left  tg xi yi zi) (makeIs3left  tg xi yi zi yis)) (makeIs4left  tg xi yi zi) == 
+        append (append (makeIs2right tg xi yi zi) (makeIs3right tg xi yi zi yis)) (makeIs4right tg xi yi zi)}  @-}
+assocNewIndices y tg xi yi zi yis 
+  | stringLen tg <= stringLen yi 
+  =   shiftIndexesLeft xi yi zi tg 
+  &&& castEq3 tg xi yi zi yis  
+  &&& shiftIndexesRight xi yi zi tg 
+  *** QED 
+  | stringLen yi < stringLen tg
+  =   is2left  `append` is3left  `append` is4left
+  ==. is2left  `append` N  `append` is4left
+      ? emptyIndices y yis 
+  ==. is2left `append` is4left
+      ? appendNil is2left
+  ==. is2right `append` is4right 
+      ? shiftNewIndices xi yi zi tg 
+  ==. (is2right `append` N) `append` is4right 
+      ? appendNil is2right
+  ==. (is2right `append` is3right) `append` is4right 
+      ? emptyIndices y yis 
+  *** QED 
+
+    where
+        is2left    = makeNewIndices xi (yi <+> zi) tg
+        is3left    = map (shiftStringRight tg xi (yi <+> zi)) yzileft
+        is4left    = map (shiftStringRight tg xi (yi <+> zi)) yzinew
+
+        is2right   = map (castGoodIndexRight tg (xi <+> yi) zi) xyinew
+        is3right   = map (castGoodIndexRight tg (xi <+> yi) zi) xyiright
+        is4right   = makeNewIndices (xi <+> yi) zi tg
+
+
+        yzileft    = map (castGoodIndexRight tg yi zi) yis
+        yzinew     = makeNewIndices yi zi tg
+
+        xyinew     = makeNewIndices xi yi tg
+        xyiright   = map (shiftStringRight tg xi yi) yis
+
+#else
+mappend_assoc _ _ _ = trivial  
+#endif
+

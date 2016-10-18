@@ -1,0 +1,53 @@
+name:                verified-string-matching
+version:             0.1.0.0
+license:             BSD3
+license-file:        LICENSE
+author:              Niki Vazou
+maintainer:          nikivazou@gmail.com
+
+build-type:          Simple
+extra-source-files:  ChangeLog.md, README.md
+cabal-version:       >=1.10
+
+
+executable verified-string-matching
+  -- .hs or .lhs file containing the Main module.
+  main-is:             Main.hs
+  
+  -- LANGUAGE extensions used by modules in this package.
+  other-extensions:    OverloadedStrings, KindSignatures, DataKinds, RankNTypes, ScopedTypeVariables, GADTs, DeriveTraversable
+
+  other-modules: StringMatching
+                 Data.RString.RString
+                 Language.Haskell.Liquid.ProofCombinators
+
+  
+  -- Other library packages from which modules are imported.
+  build-depends:       base >=4.8 && <4.9, bytestring >=0.10 && <0.11, 
+                       parallel, criterion
+
+
+  -- Directories containing source files.
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  
+Library
+   Default-Language: Haskell98
+   hs-source-dirs:  src
+
+   other-extensions:    OverloadedStrings, KindSignatures, DataKinds, RankNTypes, ScopedTypeVariables, GADTs, DeriveTraversable
+   build-depends:       base >=4.8 && <4.9, bytestring >=0.10 && <0.11, 
+                        parallel, criterion
+
+   Exposed-Modules: StringIndexing
+                    Data.RString.RString
+                    Language.Haskell.Liquid.ProofCombinators
+
+
+test-suite tests
+  default-language: Haskell98
+  type:              exitcode-stdio-1.0
+  hs-source-dirs:    src/tests
+  ghc-options:       -W -threaded
+  main-is:           Test.hs
+  build-depends:     base >=4.8 && <4.9, process, verified-string-matching
