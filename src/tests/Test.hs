@@ -6,7 +6,7 @@ import Text.Printf
 
 import Data.List (sort)
 
-import StringMaching (timeParStringMatching, timeSeqStringMatching)
+import StringMatching (timeParStringMatching, timeSeqStringMatching)
 
 main :: IO ()
 main = do 
