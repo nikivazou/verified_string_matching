@@ -26,4 +26,4 @@ addons:
 
 script:
   - stack build 
-  - stack --skip-ghc-check test verified-string-indexing
+  - stack --skip-ghc-check test verified-string-matching
