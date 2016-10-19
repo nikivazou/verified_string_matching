@@ -130,5 +130,5 @@ runLiquid :: ()   -> IO ExitCode
 runLiquid _ = 
       runCommand "stack install liquidhaskell"
   >>= waitForProcess
-  >>  runCommand "stack exec -- liquid src/StringIndexing.hs"
+  >>  runCommand "stack exec -- liquid src/StringMatching.hs"
   >>= waitForProcess 
