@@ -132,3 +132,5 @@ runLiquid _ =
   >>= waitForProcess
   >>  runCommand "stack exec -- liquid src/StringMatching.hs"
   >>= waitForProcess 
+  >>  runCommand "stack exec -- liquid src/StringMatching.hs --no-eliminate"
+  >>= waitForProcess 
