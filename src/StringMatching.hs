@@ -25,7 +25,7 @@ module StringMatching where
 
 import Prelude hiding ( mempty, mappend, id, mconcat, map, (<>), Monoid 
                       , take, drop  
-                      , error
+                      , error, undefined
                       )
 
 

@@ -139,20 +139,6 @@ class ToProve a r where
   (==?) :: a -> a -> r
 
 
-instance (a~b) => ToProve a b where
-{-@ instance ToProve a b where
-  ==? :: x:a -> y:a -> {v:b | v ~~ x }
-  @-}
-  (==?)  = undefined
-
-instance (a~b) => ToProve a (Proof -> b) where
-{-@ instance ToProve a (Proof -> b) where
-  ==? :: x:a -> y:a -> Proof -> {v:b | v ~~ x  }
-  @-}
-  (==?) = undefined
-
-
-
 class OptEq a r where
   (==.) :: a -> a -> r
 
