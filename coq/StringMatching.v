@@ -236,3 +236,139 @@ Proof.
     { reflexivity. }
   }
 Qed.
+
+Lemma length_list_drop: forall {T: Type} i (x: list T),
+  i < Datatypes.length x ->
+  Datatypes.length (list_drop i x) = Datatypes.length x - i.
+Proof.
+  intros.
+  generalize dependent i.
+  induction x; destruct i; simpl; intros.
+  { reflexivity. }
+  { reflexivity. }
+  { reflexivity. }
+  { apply IHx. intuition. }
+Qed.
+
+Lemma length_chunk_base:
+  forall {T: Type} I (x: list T),
+    let i := projT1 I in
+    i > 1 ->
+    Datatypes.length x <= i ->
+    Datatypes.length (chunk I x) = 1.
+Proof.
+  intros; subst i.
+  rewrite my_chunk_elim.
+  simpl.
+  apply leb_correct in H0.
+  rewrite H0.
+  reflexivity.
+Qed.
+Ltac feed H :=
+  match type of H with
+  | ?foo -> _ =>
+    let FOO := fresh in
+    assert foo as FOO; [|specialize (H FOO); clear FOO]
+  end.
+
+Lemma length_chunk_lt:
+  forall {T: Type} I (x: list T),
+    let i := projT1 I in
+    i > 1 ->
+    Datatypes.length x > i ->
+    Datatypes.length (chunk I x) < Datatypes.length x.
+Proof.
+  intros; subst i.
+  remember (Datatypes.length x) as len.
+  generalize dependent x.
+  induction len using strong_induction; intros.
+  rewrite my_chunk_elim.
+  simpl.
+  assert (Datatypes.length x <=? projT1 I = false) as LEB.
+  { apply leb_iff_conv. intuition. }
+  rewrite LEB.
+  simpl.
+
+  remember (list_drop (projT1 I) x) as LD.
+  specialize (H1 (Datatypes.length LD)).
+  destruct (Datatypes.length LD <=? projT1 I) eqn:LEB2.
+
+  {
+    rewrite length_chunk_base.
+    { intuition. }
+    { intuition. }
+    {
+      apply leb_complete.
+      apply LEB2.
+    }
+  }
+
+  {
+
+    assert (Datatypes.length LD < len) as A.
+    {
+      subst LD.
+      rewrite length_list_drop.
+      { intuition. }
+      { intuition. }
+    }
+
+    specialize (H1 A).
+    feed H1.
+    { apply leb_complete_conv in LEB2. intuition. }
+
+    specialize (H1 LD eq_refl).
+    intuition.
+  }
+Qed.
+
+Program Fixpoint pmconcat
+        {M: Type}
+        `{ChunkableMonoid M}
+        I (x: list M) { measure (length x) }: M :=
+  let i := projT1 I in
+  match ((i <=? 1) || (length x <=? i))%bool with
+  | true => mconcat x
+  | false => pmconcat I (map mconcat (chunk I x))
+  end.
+Next Obligation.
+  rename Heq_anonymous into COND.
+  simpl in COND.
+  symmetry in COND.
+  rewrite -> Bool.orb_false_iff in COND.
+  destruct COND as [A B].
+  rewrite Compare_dec.leb_iff_conv in A, B.
+  rewrite map_length.
+  rewrite my_chunk_elim.
+  simpl.
+  assert (Datatypes.length x <=? I = false) as D by now apply leb_iff_conv.
+  rewrite D.
+  simpl.
+
+  assert (I > 1) as L1 by intuition.
+  pose proof (@length_chunk_lt M (existT _ I X) (list_drop I x) L1) as LT.
+  simpl in *.
+
+  destruct (I <? Datatypes.length (list_drop I x)) eqn:LT1.
+
+  {
+    apply Nat.ltb_lt in LT1.
+    assert (Datatypes.length (list_drop I x) > I) as GT1 by intuition.
+    specialize (LT GT1).
+    transitivity (S (Datatypes.length (list_drop I x))).
+    { intuition. }
+    { rewrite length_list_drop.
+      { intuition. }
+      { intuition. }
+    }
+  }
+
+  {
+    clear LT L1.
+    rewrite length_chunk_base; simpl.
+    { intuition. }
+    { intuition. }
+    { now apply Nat.ltb_ge in LT1. }
+  }
+
+Qed.
