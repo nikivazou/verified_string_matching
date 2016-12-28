@@ -130,20 +130,20 @@ Next Obligation.
   { intuition. }
 Defined.
 
-Theorem if_flip_helper {B: Type} {l p: nat}
-        (C E: true = (l <=? p) -> B) (D F: false = (l <=? p) -> B):
-  (forall (r: true  = (l <=? p)), C r = E r) ->
-  (forall (r: false = (l <=? p)), D r = F r) ->
-  (if l <=? p as an return an = (l <=? p) -> B then C else D) eq_refl =
-  (if l <=? p as an return an = (l <=? p) -> B then E else F) eq_refl.
+Theorem if_flip_helper {B: Type} {b: bool}
+        (C E: true = b -> B) (D F: false = b -> B):
+  (forall (r: true  = b), C r = E r) ->
+  (forall (r: false = b), D r = F r) ->
+  (if b as an return an = b -> B then C else D) eq_refl =
+  (if b as an return an = b -> B then E else F) eq_refl.
 Proof.
   intros.
-  destruct (l <=? p).
+  destruct b.
   apply H.
   apply H0.
 Qed.
 
-Program Fixpoint my_chunk_elim {M: Type} `{ChunkableMonoid M}
+Program Fixpoint chunk_unfold {M: Type} `{ChunkableMonoid M}
         I x { measure (length x) }
   : let i := projT1 I in
     chunk I x =
@@ -153,7 +153,7 @@ Program Fixpoint my_chunk_elim {M: Type} `{ChunkableMonoid M}
     end
   := _.
 Next Obligation.
-  specialize (my_chunk_elim M H H0).
+  specialize (chunk_unfold M H H0).
   unfold chunk.
   unfold chunk_func.
   (*
@@ -208,7 +208,7 @@ Proof.
   remember (length x) as len.
   generalize dependent x.
   induction len using strong_induction; intros.
-  rewrite my_chunk_elim.
+  rewrite chunk_unfold.
   simpl.
   destruct i as [i I]; simpl.
   destruct (Nat.leb (length x) i) eqn:LEB.
@@ -258,7 +258,7 @@ Lemma length_chunk_base:
     Datatypes.length (chunk I x) = 1.
 Proof.
   intros; subst i.
-  rewrite my_chunk_elim.
+  rewrite chunk_unfold.
   simpl.
   apply leb_correct in H0.
   rewrite H0.
@@ -282,7 +282,7 @@ Proof.
   remember (Datatypes.length x) as len.
   generalize dependent x.
   induction len using strong_induction; intros.
-  rewrite my_chunk_elim.
+  rewrite chunk_unfold.
   simpl.
   assert (Datatypes.length x <=? projT1 I = false) as LEB.
   { apply leb_iff_conv. intuition. }
@@ -339,7 +339,7 @@ Next Obligation.
   destruct COND as [A B].
   rewrite Compare_dec.leb_iff_conv in A, B.
   rewrite map_length.
-  rewrite my_chunk_elim.
+  rewrite chunk_unfold.
   simpl.
   assert (Datatypes.length x <=? I = false) as D by now apply leb_iff_conv.
   rewrite D.
@@ -372,3 +372,47 @@ Next Obligation.
   }
 
 Qed.
+
+Program Fixpoint pmconcat_unfold
+        {M: Type}
+        `{ChunkableMonoid M}
+        I (x: list M) { measure (length x) }:
+  pmconcat I x =
+  let i := projT1 I in
+  match ((i <=? 1) || (length x <=? i))%bool with
+  | true => mconcat x
+  | false => pmconcat I (map mconcat (chunk I x))
+  end := _.
+Next Obligation.
+  specialize (pmconcat_unfold M H H0).
+  unfold pmconcat.
+  unfold pmconcat_func.
+  match goal with |- context [ Fix_sub ?A_ ?R_ ?Rwf_ ?P_ ?f_ ?x_ ] =>
+                  set (x2 := x_);
+                  set (f := f_);
+                  set (P := P_);
+                  set (Rwf := Rwf_);
+                  set (R := R_) in *;
+                  set (A := A_) in *
+  end.
+  rewrite fix_sub_eq.
+  {
+    unfold f; simpl.
+    destruct ((I <=? 1) || (Datatypes.length x <=? I))%bool eqn:B.
+    { reflexivity. }
+    { reflexivity. }
+  }
+  {
+    intros.
+    destruct x0 as [M' [MM [CMM [[i' I'] x']]]]; simpl in *.
+    unfold f; simpl.
+    apply if_flip_helper; intro.
+    reflexivity.
+
+    (* This is annoying... *)
+
+Qed.
+
+Theorem concatEquivalence: forall {T: Type} i (x: list (list T)),
+    pmconcat i x = mconcat x.
+Proof.
