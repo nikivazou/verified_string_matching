@@ -115,7 +115,7 @@ Qed.
 (* Changed recursion to decrementing hi, so that it is structurally recursive *)
 Fixpoint makeIndicesAux (s tg : string) (lo cnt : nat) : list nat :=
   match cnt with
-    | O => if isGoodIndexDec s tg lo then [:: lo] else nil
+    | O => nil 
     | S cnt' => let rest := makeIndicesAux s tg lo cnt' in
                 if isGoodIndexDec s tg (lo + cnt) then (lo + cnt)::rest else rest
   end.
@@ -134,7 +134,7 @@ Definition makeIndices (s tg : string) (lo hi : nat) : list nat :=
 
 (* Discrepancy (length sl == 0) because of using nats instead of ints *)
 Definition makeNewIndices (sl sr tg : string) : list nat :=
-  if (length tg < 2) || (length sl == 0) then nil
+  if (length tg < 2) then nil
   else makeIndices (sl ◇ sr) tg (length sl - (length tg - 1)) (length sl - 1).
 
 Lemma makeNewIndices_correct : forall sl sr tg,  
@@ -142,7 +142,7 @@ Lemma makeNewIndices_correct : forall sl sr tg,
 Proof.
   move => sl sr tg.
   unfold makeNewIndices, makeIndices.
-  destruct ((length tg < 2) || (length sl == 0)); auto.
+  destruct (length tg < 2); auto.
   apply makeIndicesAux_correct; auto.
 Qed.
 
@@ -186,10 +186,52 @@ Lemma newIsNullLeft : forall s t,  makeNewIndices "" s t = nil.
   destruct (String.length t < 2); auto.
 Qed.
 
+Lemma makeNewIndicesNullSmallInput (s t : string) (lo hi : nat) :
+  1 + String.length s <= String.length t ->
+  makeIndices s t lo hi = nil.
+Proof.
+  move => Rel.
+  unfold makeIndices.
+  remember (hi - lo) as cnt.
+  move : lo hi Heqcnt s t Rel.
+  induction cnt => lo hi HCnt s t Rel; auto.
+  simpl.
+  destruct (isGoodIndexDec s t (lo + cnt.+1)) eqn:Good; simpl; auto.
+  - unfold isGoodIndex in i.
+    inversion i; exfalso.
+    clear H Good i.
+    simpl in H0. ssromega.
+  - eapply (IHcnt _ (hi -1)); eauto.
+    ssromega.
+Qed.
+
+Lemma makeNewIndicesSmallIndex (s t : string) (lo hi : nat) :
+  String.length t < 2 + String.length s ->
+  String.length s - (String.length t - 1) <= lo ->
+  lo <= hi ->
+  makeIndices s t lo hi = nil.
+Proof.
+  unfold makeIndices.
+  remember (hi - lo) as cnt.
+  move: lo hi s t Heqcnt.
+  induction cnt => lo hi s t Heqcnt Len1 Len2 Rel; simpl; auto.
+  destruct (isGoodIndexDec s t (lo + cnt.+1)) eqn:Good; simpl; auto.
+  - exfalso.
+    unfold isGoodIndex in i; inversion i.
+    clear H Good i.
+    simpl in H0.
+    ssromega.
+  - eapply (IHcnt _ (hi-1)); eauto; try ssromega.
+Qed.
+
 Lemma newIsNullRight : forall s t, makeNewIndices s "" t = nil.
   move => s t.
   unfold makeNewIndices; simpl; rewrite string_app_nil_r; simpl.
-Admitted.
+  destruct (String.length t < 2) eqn:LenT; auto.
+  destruct (1 + String.length s <= String.length t) eqn:Rel; auto.
+  - apply makeNewIndicesNullSmallInput; auto.
+  - apply makeNewIndicesSmallIndex; auto; try ssromega.
+Qed.
   
 Instance monoid_SM (target : Symbol) : Monoid (SM target) :=
   {
