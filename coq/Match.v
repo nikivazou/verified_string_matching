@@ -145,10 +145,9 @@ Qed.
 Definition makeIndices (s tg : string) (lo hi : nat) : list nat :=
   makeIndicesAux s tg lo (hi - lo).
 
-(* Discrepancy (length sl == 0) because of using nats instead of ints *)
 Definition makeNewIndices (sl sr tg : string) : list nat :=
   if (length tg < 2) then nil
-  else makeIndices (sl ◇ sr) tg (length sl - (length tg - 1)) (length sl - 1).
+  else makeIndices (sl ◇ sr) tg (length sl - (length tg - 1)) (length sl).
 
 Lemma makeNewIndices_correct : forall sl sr tg,  
   List.Forall (isGoodIndex (sl ◇ sr) tg) (makeNewIndices sl sr tg).
@@ -206,7 +205,7 @@ Qed.
 
 Lemma newIsNullLeft : forall s t,  makeNewIndices "" s t = nil.
   move => s t; unfold makeNewIndices; simpl; auto.
-  destruct (String.length t < 2); auto.
+  destruct (String.length t < 2); simpl; auto.
 Qed.
 
 Lemma makeNewIndicesNullSmallInput (s t : string) (lo hi : nat) :
@@ -381,17 +380,17 @@ Proof.
   remember (String.length xi) as xl.
   remember (String.length yi) as yl.
   remember (String.length tg) as tl.
-  assert (Aux: yl - 1 - (yl - (tl - 1)) = tl - 2)
+  assert (Aux: yl - (yl - (tl - 1)) = tl - 1)
     by ssromega.
   rewrite Aux; clear Aux; simpl.
-  assert (Aux: xl + yl - 1 - (xl + yl - (tl - 1)) = tl - 2)
+  assert (Aux: xl + yl - (xl + yl - (tl - 1)) = tl - 1)
     by ssromega.
   rewrite Aux; clear Aux; simpl.
   remember (yl - (tl - 1)) as lo.
   assert (Aux: xl + yl - (tl - 1) = xl + lo) by ssromega.
   rewrite Aux; clear Aux; simpl.
   assert (lo > 0) by ssromega.
-  remember (tl - 2) as hi.
+  remember (tl - 1) as hi.
   rewrite -string_app_assoc.
   eapply shiftIndicesAuxRight; eauto.
 Qed.
@@ -457,7 +456,7 @@ Proof.
     eapply shiftIndicesAuxRight; eauto.
 Qed.    
 
-Lemma makeIndicesSplit s tg lo mid hi :
+Lemma makeIndicesSplit mid s tg lo hi :
   lo <= mid -> mid <= hi ->
   makeIndices s tg lo hi = 
   (makeIndices s tg lo mid ++ makeIndices s tg mid hi)%list.
@@ -519,7 +518,7 @@ Proof.
         rewrite Sub0.
         destruct (xl + yl < tl) eqn:Rel.
         - (* Target greater than the first two strings *)
-          assert (Aux : makeIndices (xi ++ yi) tg (xl - (tl - 1)) (xl - 1) = nil).
+          assert (Aux : makeIndices (xi ++ yi) tg (xl - (tl - 1)) xl = nil).
           { 
             subst.
             apply makeNewIndicesNullSmallInput.
@@ -532,23 +531,61 @@ Proof.
             rewrite addn0.
             rewrite subn0.
             unfold makeIndices.
-            admit.
-          + assert (Aux': makeIndices (yi ++ zi) tg 0 (yl - 1) = nil).
+            assert (Aux' : xl + yl - (tl - 1) = 0) by ssromega; rewrite Aux'; clear Aux'.
+            assert (Aux' : xl - (tl - 1) = 0) by ssromega; rewrite Aux'; clear Aux'.
+            rewrite !subn0.
+            rewrite string_app_assoc.
+            simpl; rewrite -Heqxl.
+            destruct (yl == 0) eqn:YL0; auto.
+            * assert (yl = 0) by ssromega.
+              rewrite !H. simpl. rewrite addn0. rewrite List.app_nil_r; auto.
+            * assert (H1 : 0 <= xl) by auto.
+              assert (H2: xl <= xl + yl) by ssromega.
+              pose proof (makeIndicesSplit xl ((xi ++ yi) ++ zi) tg 0 (xl + yl) H1 H2) as H.
+              unfold makeIndices in H.
+              rewrite !subn0 in H.
+              rewrite H.
+              f_equal.
+              rewrite addnC.
+              assert (H0 : yl + xl - xl = yl) by ssromega.
+              rewrite H0; auto.
+          + assert (Aux': makeIndices (yi ++ zi) tg 0 yl = nil).
             {
               subst.
               apply makeNewIndicesNullSmallInput.
               rewrite -append_length_2.
               ssromega.
             } 
-            rewrite Aux'.
+            rewrite Aux'; clear Aux'.
             simpl.
             rewrite List.app_nil_r.
-            admit.
+            (* Break into two parts each *)
+            rewrite (makeIndicesSplit (xl + yl - (tl - 1))); try ssromega.
+            symmetry.
+            rewrite (makeIndicesSplit xl); try ssromega.
+            assert (Hyp: makeIndices ((xi ++ yi) ++ zi) tg xl (xl + yl) = nil).
+            {
+              destruct (tl <= xl + yl + zl) eqn:TooLarge; auto; subst.
+              - eapply makeNewIndicesSmallIndex; eauto;
+                try rewrite -!append_length_2;
+                try ssromega.
+                (* Another place where Z3 would just work *)
+                assert (Hyp: 1 + (String.length xi + String.length yi + String.length zi) 
+                           = String.length xi + (1 + String.length yi + String.length zi))
+                       by ssromega.
+                rewrite Hyp; clear Hyp.
+                ssromega.
+              - eapply makeNewIndicesNullSmallInput; eauto.
+                rewrite -!append_length_2; ssromega.
+            } 
+            rewrite Hyp List.app_nil_r.
+            assert (Aux' : xl + yl - (tl - 1) = 0) by ssromega; rewrite Aux'; clear Aux'.
+            simpl; auto.
         - admit.
       } 
     * inversion Hyp; subst.
       inversion H1; simpl in *; ssromega.
-Qed.
+Admitted.
 
 
 
