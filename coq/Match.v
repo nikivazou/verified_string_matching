@@ -472,6 +472,26 @@ Proof.
     eapply (IHcnt _ _ _ lo.+1 hi); eauto; ssromega.
 Qed.
 
+      
+
+Lemma makeIndicesAppendRight tg sl sr lo hi :
+  hi + String.length tg - 1 <= String.length sl ->
+  makeIndices sl tg lo hi = makeIndices (sl ++ sr) tg lo hi.
+Proof.
+  unfold makeIndices.
+  remember (hi - lo) as cnt.
+  move: sl sr lo hi Heqcnt.
+  induction cnt => sl sr lo hi Cnt Len; simpl; auto.
+  destruct (isGoodIndexDec sl tg lo) as [H | H];
+  destruct (isGoodIndexDec (sl ++ sr) tg lo) as [H' | H']; simpl; eauto.
+  - f_equal; eapply (IHcnt _ _ lo.+1); eauto; ssromega.
+  - exfalso; apply H'.
+    eapply goodIndexLeft; eauto.
+  - exfalso; apply H.
+    eapply isGoodIndexSmall; eauto; ssromega.
+  - eapply (IHcnt _ _ lo.+1); eauto; ssromega.
+Qed.
+
 Theorem sm_mappend_assoc tg (sm1 sm2 sm3 : SM tg) :
   validSM tg sm1 -> validSM tg sm2 -> validSM tg sm3 -> 
   sm_mappend tg sm1 (sm_mappend tg sm2 sm3) =
@@ -581,13 +601,47 @@ Proof.
             rewrite Hyp List.app_nil_r.
             assert (Aux' : xl + yl - (tl - 1) = 0) by ssromega; rewrite Aux'; clear Aux'.
             simpl; auto.
-        - admit.
+        - rewrite shiftStringRight_append_front; simpl; eauto.
+          rewrite add0n.
+          rewrite -!Heqxl.
+          replace (makeIndices (xi ++ yi) tg (xl - (tl - 1)) xl) 
+             with (makeIndices (xi ++ yi) tg (xl - (tl - 1)) (xl + yl - (tl - 1)) ++
+                   makeIndices (xi ++ yi) tg (xl + yl - (tl - 1)) xl)%list
+               by (symmetry; eapply makeIndicesSplit; eauto; ssromega).
+          assert (Aux : makeIndices (xi ++ yi) tg (xl + yl - (tl - 1)) xl = nil).
+          { 
+            eapply makeNewIndicesSmallIndex; subst; eauto; 
+            try rewrite -!append_length_2; try ssromega.
+            (* Again, should be provable *)
+            rewrite subnBA; try ssromega.
+            rewrite !addnA.
+            replace (1 + String.length xi + String.length yi)
+               with (String.length xi + String.length yi + 1)
+                 by ssromega.
+            auto.
+          } 
+          rewrite Aux; rewrite List.app_nil_r; simpl; auto; clear Aux.
+          replace (makeIndices (xi ++ yi) tg (xl - (tl - 1)) (xl + yl - (tl - 1)))
+             with (makeIndices ((xi ++ yi) ++ zi) tg (xl - (tl - 1)) (xl + yl - (tl - 1)))
+               by (symmetry; eapply makeIndicesAppendRight; eauto;
+                   rewrite -!append_length_2; subst; ssromega).
+          rewrite (makeIndicesSplit (xl + yl - (tl - 1))); try ssromega.
+          rewrite -!List.app_assoc.
+          f_equal.
+          rewrite string_app_assoc.
+          rewrite addnC.
+          rewrite -makeIndicesSplit; eauto; try ssromega.
       } 
     * inversion Hyp; subst.
       inversion H1; simpl in *; ssromega.
-Admitted.
+Qed. 
 
+(* This is what I mean by omega creating bad proof terms 
+WARNING: uncommenting this will take forever 
 
+ Print sm_mappend_assoc. 
+
+*)
 
 (* Intrinsic is needed for the monoid instance with a monoid instance... *)
 Instance monoid_SM (target : Symbol) : Monoid (SM target) :=
@@ -642,13 +696,3 @@ Defined. *)
 
 Admitted.
   
-  
-
-emptyIndices :: forall (target :: Symbol). (KnownSymbol target) => SM target -> List Int  -> Proof
-{-@ emptyIndices :: mi:SM target
-                 -> is:{List (GoodIndex (inputSM mi) target) | is == indicesSM mi && stringLen (inputSM mi) < stringLen target}
-                 -> { is == N } @-}
-emptyIndices (SM _ _) N 
-  = trivial 
-emptyIndices (SM _ _) (C _ _)
-  = trivial 
