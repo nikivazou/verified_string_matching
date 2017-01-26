@@ -17,6 +17,8 @@
 {-@ infix <+> @-}
 {-@ infix <>  @-}
 
+{-@ define StringMatching.mempty = mempty @-}
+
 module StringMatching where
 
 #define CheckAll

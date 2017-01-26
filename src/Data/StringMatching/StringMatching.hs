@@ -45,14 +45,14 @@ inputSM (SM i _) = i
 -------------------------------------------------------------------------------
 
 
-{-@ reflect toSM @-}
+{-@ axiomatize toSM @-}
 toSM :: forall (target :: Symbol). (KnownSymbol target) => RString -> SM target 
 toSM input = SM input (makeSMIndices input tg) 
   where
     tg = fromString (symbolVal (Proxy :: Proxy target))
 
 
-{-@ reflect makeSMIndices @-}
+{-@ axiomatize makeSMIndices @-}
 {-@ makeSMIndices :: input:RString -> target:RString -> List (GoodIndex input target) @-}
 makeSMIndices :: RString -> RString -> List Int 
 makeSMIndices input target = makeIndices input target  0 (stringLen input - 1)
@@ -61,11 +61,11 @@ makeSMIndices input target = makeIndices input target  0 (stringLen input - 1)
 ----------  Monoid Operators on SM --------------------------------------------
 -------------------------------------------------------------------------------
 
-{-@ reflect mempty @-}
+{-@ axiomatize mempty @-}
 mempty :: forall (target :: Symbol). (KnownSymbol target) =>  SM target
 mempty = SM stringEmp N
 
-{-@ reflect <> @-}
+{-@ axiomatize <> @-}
 (<>) :: forall (target :: Symbol).  (KnownSymbol target) => SM target -> SM target -> SM target
 (SM i1 is1) <> (SM i2 is2)
   = SM (i1 <+> i2) (is1' `append` is `append` is2')
@@ -135,7 +135,7 @@ makeIndices input target lo hi
 {-@ reflect isGoodIndex @-}
 isGoodIndex :: RString -> RString -> Int -> Bool 
 {-@ isGoodIndex :: input:RString -> target:RString -> i:Int 
-  -> {b:Bool | Prop b <=> IsGoodIndex input target i} @-}
+  -> {b:Bool | b <=> IsGoodIndex input target i} @-}
 isGoodIndex input target i 
   =  subString input i (stringLen target)  == target  
   && i + stringLen target <= stringLen input

@@ -8,7 +8,7 @@ parStrategy = r0
 #endif
 
 
-{-@ reflect pmconcat @-}
+{-@ axiomatize pmconcat @-}
 pmconcat :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Monoid a 
 {-@ pmconcat :: Int -> is:List (Monoid a) -> Monoid a /[llen is] @-}
 pmconcat i xs
@@ -19,6 +19,6 @@ pmconcat i xs
 
 
 mconcat  :: forall (a :: Symbol). (KnownSymbol a) => List (Monoid a) -> Monoid a 
-{-@ reflect mconcat @-}
+{-@ axiomatize mconcat @-}
 mconcat N        = mempty
 mconcat (C x xs) =  x <> (mconcat xs)
