@@ -13,7 +13,13 @@
 
 {-@ assume withStrategy :: _ -> x:a -> {v:a | v == x } @-}
 
-module Parallelize where 
+module Parallelize (
+
+  Parallelizable(..), Monoid(..), ChunkableMonoid(..), 
+
+  Morphism
+
+  ) where 
 
 import Prelude hiding (Monoid (..), length, drop, take, map)
 
@@ -29,38 +35,34 @@ import Control.Parallel.Strategies
 class (ChunkableMonoid m, ChunkableMonoid n, Eq m) => Parallelizable n m where 
 
   parallelize :: (n -> m) -> Morphism n m -> Nat -> Nat -> n -> m 
-  parallelize = parallelizeWithStrategy parStrategy
+  parallelize f p i j x = parallelizeWithStrategy parStrategy f p i j x
+                            `byTheorem` equivalencePropDef parStrategy f p i j x
 
   parallelizeWithStrategy :: Strategy (L m) -> (n -> m) -> Morphism n m -> Nat -> Nat -> n -> m 
-  parallelizeWithStrategy = parallelizeWithStrategyDef 
+  parallelizeWithStrategy stg f p i j x = parallelizeWithStrategyDef  stg f p i j x 
+                            `byTheorem` equivalencePropDef stg f p i j x
 
 
-  equivalenceProp :: Strategy (L m) -> (n -> m) -> Morphism n m -> Nat -> Nat -> n -> Proof 
-  equivalenceProp stg f p i j x =   equivalencePropDef stg f p i j x
-                                --  NV TODO: replace this with an auto replacement  
-                                &&& equivalencePropDefAssumed stg f p i j x 
 
 
 {-@ class Parallelizable n m where 
-  parallelize             :: f:(n -> m) -> Morphism n m f -> Nat -> Nat -> n -> m
+  parallelize             :: f:(n -> m) -> Morphism n m f -> Nat -> Nat -> x:n -> {v:m | v = f x }
 
-  parallelizeWithStrategy :: Strategy (L m) -> f:(n -> m) -> Morphism n m f -> Nat -> Nat -> n -> m 
+  parallelizeWithStrategy :: Strategy (L m) -> f:(n -> m) -> Morphism n m f -> Nat -> Nat -> x:n -> {v:m | v == f x} 
 
-  equivalenceProp         :: stg:Strategy (L m) -> f:(n -> m) -> p:Morphism n m f -> i:Nat -> j:Nat -> x:n -> {v:Proof | f x == parallelizeWithStrategy stg f p i j x } 
   @-}
 
 
 
 {-@ axiomatize parallelizeWithStrategyDef @-}
-parallelizeWithStrategyDef :: (Monoid m, ChunkableMonoid n) => Strategy (L m) -> (n -> m) -> Morphism n m -> Nat -> Nat -> n -> m 
+parallelizeWithStrategyDef :: (ChunkableMonoid n, Monoid m) => Strategy (L m) -> (n -> m) -> Morphism n m -> Nat -> Nat -> n -> m 
 -- NV TODO NAME RESOLTUION BUG the first argument's name should be xa4....
 {-@ parallelizeWithStrategyDef :: Strategy (L m) -> xa4:(n -> m) -> Morphism n m xa4 -> Nat -> Nat -> n -> m @-}
-parallelizeWithStrategyDef stg f _ i j x 
+parallelizeWithStrategyDef stg f p i j x 
   | i == 0 
   = f x 
   | otherwise 
-  = pmconcatWithStrategy stg j (pmapWithStrategy stg f (chunk i x))
-
+  = pmconcatWithStrategy stg j (pmapWithStrategy stg f (chunk i x)) 
 
 -------------------------------------------------------------------------------
 ------------- Helper Type Definitiions  ---------------------------------------
@@ -68,7 +70,10 @@ parallelizeWithStrategyDef stg f _ i j x
 
 
 type Morphism n m = n -> n -> Proof  
-{-@ type Morphism n m F = x:n -> y:n -> {v:Proof | F mempty = mempty && F (mappend x y) == mappend (F x) (F y) } @-}
+{-@ type Morphism n m F = x:n -> y:n -> {v:Proof |  F (mappend x y) == mappend (F x) (F y) } @-}
+
+-- NV TODO: restore the following correct type: now fixpoint crashes
+{- type Morphism n m F = x:n -> y:n -> {v:Proof | F mempty = mempty && F (mappend x y) == mappend (F x) (F y) } @-}
 
 type Pos          = Int 
 {-@ type Pos      = {v:Int | 0 < v} @-}
@@ -133,11 +138,11 @@ class Monoid m => ChunkableMonoid m where
 	takeDropProp :: Nat -> m -> Proof 
 
 {-@ class ChunkableMonoid m where
-	length :: x:m -> {v:Nat | v = length x} 
-	drop   :: i:Nat -> x:{m | i <= length x} -> {v:m | length v == length x - i } 
-	take   :: i:Nat -> x:{m | i <= length x} -> {v:m | length v == i }
+	length :: x:m -> {v:Int | 0 <= v && v = length x} 
+	drop   :: i:{Int | 0 <= i} -> x:{m | i <= length x} -> {v:m | length v == length x - i } 
+	take   :: i:{Int | 0 <= i} -> x:{m | i <= length x} -> {v:m | length v == i }
 
-	takeDropProp :: i:Nat -> x:{m | i <= length x} -> {v:Proof | x == mappend (take i x) (drop i x)} 
+	takeDropProp :: i:{Int | 0 <= i} -> x:{m | i <= length x} -> {v:Proof | x == mappend (take i x) (drop i x)} 
  @-}
 
 {-@ reflect method take   @-}
@@ -180,7 +185,6 @@ instance Monoid (L a) where
 
 
 {-@ axiomatize memptyList @-}
-{- assume memptyList :: {v:L a  | v == mempty && v == memptyList && v == N } @-}
 memptyList :: L a 
 memptyList = N   
 
