@@ -7,17 +7,13 @@ packages:
     git: https://github.com/christetreault/liquiddesugar.git
     commit: 792501fdbf75edbdeb496f9e16ee7ddf6fd2decf
 
-- location: 
-    git: https://github.com/ucsd-progsys/prover.git
-    commit: a9be047a996b3a4aa76910494804e6b6565a0707
-
 - location:
     git: https://github.com/ucsd-progsys/liquid-fixpoint.git
-    commit: 961c4b9c691c372bb21a53e63292d6c246423e9a
+    commit: d6c56f1a75fd546685498231f7ca273ffef36a2c
 
 - location:
     git: https://github.com/ucsd-progsys/liquidhaskell.git
-    commit: 09430c9433202c637fa99befa91f390e476514e9
+    commit: b11d400d299c0ee0a507f0c776b6459820fd0b96
 
 extra-deps:
 - dotgen-0.4.2
