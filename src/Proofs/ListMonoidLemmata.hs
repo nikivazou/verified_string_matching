@@ -33,6 +33,20 @@ listAssoc (C x xs) y z
   *** QED 
 
 
+{-@ listTakeDrop :: i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} / [llen xs] @-}
+listTakeDrop :: Int -> List a -> Proof 
+listTakeDrop i xs | i == 0 
+  =   append (take i xs) (drop i xs)
+  ==. append N xs 
+  ==. xs ? listLeftId xs 
+  *** QED 
+listTakeDrop i (C x xs)    
+  =   append (take i (C x xs)) (drop i (C x xs)) 
+  ==. append (x `C` (take (i-1) xs)) (drop (i-1) xs)
+  ==. x `C` (append (take (i-1) xs) (drop (i-1) xs))
+  ==. x `C` xs ? listTakeDrop (i-1) xs 
+  *** QED 
+
 -------------------------------------------------------------------------------
 --------------  Compatibility with the old names  -----------------------------
 -------------------------------------------------------------------------------

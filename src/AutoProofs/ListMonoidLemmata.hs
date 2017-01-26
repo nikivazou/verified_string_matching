@@ -1,3 +1,7 @@
+{-@ automatic-instances listRightId @-}
+{-@ automatic-instances listLeftId  @-}
+{-@ automatic-instances listAssoc   @-}
+
 {-@ listRightId :: xs:List a -> { append N xs = xs } @-} 
 listRightId :: List a -> Proof 
 listRightId xs = trivial
@@ -14,6 +18,13 @@ listAssoc :: List a -> List a -> List a -> Proof
 listAssoc N _ _       = trivial
 listAssoc (C _ x) y z = listAssoc x y z
 
+
+{-@ automatic-instances listTakeDrop   @-}
+
+{-@ listTakeDrop :: i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} / [llen xs] @-}
+listTakeDrop :: Int -> List a -> Proof 
+listTakeDrop i xs | i == 0 = listLeftId xs 
+listTakeDrop i (C _ xs)    = listTakeDrop (i-1) xs 
 
 -------------------------------------------------------------------------------
 --------------  Compatibility with the old names  -----------------------------

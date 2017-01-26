@@ -55,7 +55,7 @@ chunk i xs
   | otherwise
   = C (take i xs) (chunk i (drop i xs))
 
-{-@ reflect drop @-}
+{-@ axiomatize drop @-}
 {-@ drop :: i:Nat -> xs:{List a | i <= llen xs } -> {v:List a | llen v == llen xs - i } @-} 
 drop :: Int -> List a -> List a 
 drop i N = N 
@@ -65,7 +65,7 @@ drop i (C x xs)
   | otherwise 
   = drop (i-1) xs 
 
-{-@ reflect take @-}
+{-@ axiomatize take @-}
 {-@ take :: i:Nat -> xs:{List a | i <= llen xs } -> {v:List a | llen v == i} @-} 
 take :: Int -> List a -> List a 
 take i N = N 
