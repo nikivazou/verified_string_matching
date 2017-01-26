@@ -1,36 +1,18 @@
 {-@ listRightId :: xs:List a -> { append N xs = xs } @-} 
 listRightId :: List a -> Proof 
-listRightId xs = append N xs ==. xs *** QED 
+listRightId xs = trivial
 
 {-@ listLeftId :: xs:List a -> { append xs N = xs } @-} 
 listLeftId :: List a -> Proof 
-listLeftId N 
-  =   append N N
-  ==. N
-  *** QED 
-listLeftId (C x xs) 
-  =   append (C x xs) N
-  ==. C x (append xs N)
-  ==. C x xs ? listLeftId xs 
-  *** QED 
+listLeftId N        = trivial 
+listLeftId (C _ xs) = listLeftId xs 
 
 
 {-@ listAssoc :: x:List a -> y:List a -> z:List a 
      -> {(append x (append y z)) == (append (append x y) z) } @-}
 listAssoc :: List a -> List a -> List a -> Proof
-listAssoc N y z 
-  =   append N (append y z)
-  ==. append y z
-  ==. append (append N y) z
-  *** QED 
-listAssoc (C x xs) y z
-  =   append (C x xs) (append y z) 
-  ==. C x (append xs (append y z))
-  ==. C x (append (append xs y) z)
-        ? listAssoc xs y z
-  ==. append (C x (append xs y)) z
-  ==. append (append (C x xs) y) z
-  *** QED 
+listAssoc N _ _       = trivial
+listAssoc (C _ x) y z = listAssoc x y z
 
 
 -------------------------------------------------------------------------------

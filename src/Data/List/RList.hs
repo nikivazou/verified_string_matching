@@ -39,7 +39,7 @@ map :: (a -> b) -> List a -> List b
 map _ N        = N
 map f (C x xs) = C (f x) (map f xs)
 
-{-@ reflect append @-}
+{-@ axiomatize append @-}
 append :: List a -> List a -> List a 
 append N        ys = ys 
 append (C x xs) ys = x `C` (append xs ys)
