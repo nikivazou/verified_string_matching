@@ -242,7 +242,6 @@ Proof.
   inversion H1; subst; auto.
 Qed.
 
-(* Playing with non-option version. Not easy to reason about *)
 Corollary chunk_res_not_none :
   forall {A} i (x : A) `{_ : ChunkableMonoid A},
     i > 0 -> chunk (length x).+1 i x = None -> False.
@@ -252,6 +251,7 @@ Proof.
   congruence.
 Qed.
 
+(* Playing with non-option version. Not easy to reason about *)
 Definition chunk' {A : Type} `{M : ChunkableMonoid A} 
         (i : nat) (x : A) (HI : i > 0) : list A.
   destruct (chunk (length x).+1 i x) eqn:HC.
@@ -265,7 +265,8 @@ End Fuel.
 
 Module Intrinsic.
 
-(* Intrinsic version. The Programs make reasoning stupidly hard *)
+(*
+(* Intrinsic version. The "Program/measure" makes reasoning stupidly hard *)
 Program Fixpoint chunk {A: Type} `{M: ChunkableMonoid A}
         (i : nat) (x : A) (HI : i > 0)
         { measure (length x) }
@@ -279,6 +280,29 @@ Next Obligation.
   move : Heq_anonymous => /leP Hyp.
   rewrite drop_spec; ssromega.
 Defined.
+*)
+
+
+Definition lengthOrder {A} (ls1 ls2 : list A) :=
+  length ls1 < length ls2.
+
+Lemma lengthOrder_wf' {A} : forall len (ls : list A), length ls <= len -> Acc lengthOrder ls.
+  unfold lengthOrder; induction len => ls /leP HLen; simpl in *; auto.
+  - inversion HLen; constructor => ls' /ltP H.
+    rewrite H0 in H; inversion H.
+  - inversion HLen; constructor => ls' H'.
+    + destruct ls; simpl in *; try congruence.
+      eapply IHlen; eauto. ssromega.
+    + eapply IHlen; eauto; ssromega.
+Defined.
+
+Print lengthOrder_wf'.
+
+Theorem lengthOrder_wf {A} : well_founded (@lengthOrder A).
+  red; intro; eapply lengthOrder_wf'; eauto.
+Defined.
+
+
 
 End Intrinsic.
 
@@ -347,10 +371,10 @@ Proof.
 Qed.
 
 Section PMConcat.
-  (* Similar treatment of PM Concat with Fuel *)
-  (* Maybe there could be some automation here, since they 
-     are extremely similar *)
-  
+
+
+(* Similar treatment of PM Concat with Fuel *)
+(* Maybe there could be some automation here, since they are extremely similar *)
 Fixpoint pmconcat {A} `{_ : ChunkableMonoid A} 
          (fuel : nat) i (xs : seq A) : option A :=
   match fuel with
