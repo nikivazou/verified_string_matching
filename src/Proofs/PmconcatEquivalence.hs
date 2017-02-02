@@ -4,6 +4,7 @@
 type Monoid a = SM a 
 
 #else  
+
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -18,6 +19,10 @@ type Monoid a = SM a
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--trust-internals"     @-}
 
+
+{-@ infix <+> @-}
+{-@ infix <> @-}
+
 import Language.Haskell.Liquid.ProofCombinators 
 
 
@@ -30,15 +35,38 @@ import Prelude hiding ( mempty, mappend, mconcat, map, Monoid
 import Control.Parallel.Strategies 
 import GHC.TypeLits
 
+import Data.RString.RString 
 
 #define CheckParEquivalence
 #define ParallelEvaluation
 
-#include "RList.hs"
-#include "MList.hs"
-#include "PMonoid.hs"
+#include "../Data/List/RList.hs"
+#include "../Data/RString/Chunk.hs"
+#include "../Data/List/MList.hs"
+#include "../Data/Monoid/PMonoid.hs"
+#include "../Proofs/DistributeInput.hs"
 
 #endif
+
+
+{-@ parallelismEquivalence :: 
+      f:(RString -> Monoid target) 
+   -> (x1:RString -> x2:RString -> {f (x1 <+> x2) ==  (f x1) <> (f x2)})
+   -> is:RString  -> n:Int -> m:Int
+   -> {f is == pmconcat m (map f (chunkString n is)) } @-}
+
+parallelismEquivalence :: forall (target :: Symbol). (KnownSymbol target) 
+  => (RString -> Monoid target)
+  -> (RString -> RString -> Proof) 
+  -> RString -> Int -> Int -> Proof
+parallelismEquivalence f thm is n m  
+  =   pmconcat m (map f (chunkString n is))
+  ==. mconcat (map f (chunkString n is))
+      ? pmconcatEquivalence m (map f (chunkString n is) :: List (Monoid target))
+  ==. f is 
+      ? distributeInput f thm is n 
+  *** QED  
+
 
 
 pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof
