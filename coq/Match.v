@@ -73,7 +73,7 @@ Proof.
     eauto.
 Qed.
 
-(* External verification is so much easier :) *)
+(* Extrinsic verification is so much easier :) *)
 Inductive SM (tg : Symbol) :=
 | Sm : forall (input : string) (l : list nat), SM tg.
 
@@ -81,10 +81,8 @@ Inductive validSM tg : SM tg -> Prop :=
 | ValidSM : forall input l,
               (List.Forall (isGoodIndex input tg) l) ->
               validSM tg (Sm tg input l).
-(* TODO: Add
-         List.Forall (isGoodIndex input tg) l ->
-         SM tg. *)
 
+(* String manipulation lemmas *)
 Lemma subStrAppendRight : forall (sl sr : string) (i j : nat),
   i + j <= length sl -> substring i j sl = substring i j (sl ◇ sr).
 Proof.
@@ -99,21 +97,18 @@ Proof.
     rewrite Hyp; auto.
 Qed. (* Proving some things admitted in Liquid Haskell just to be sure *)
 
-Lemma subStrConcatBack1 input input' j i :    
-  i + j <= length input ->
-  substring i j input = substring i j (input ◇ input').
-Admitted. (* As in liquid Haskell *)
-
-Lemma subStrConcatBack2 input input' j i : 
-  i + j <= length input -> 
-  length input <= length (input ◇ input').
-Admitted. (* As in liquid Haskell *)
-
 Lemma append_length : forall sl sr, length sl <= length (sl ++ sr).
   move => sl; induction sl => sr; simpl; auto.
   eapply leq_ltn_trans; eauto.
 Qed.
-  
+
+Lemma append_length_2 : 
+  forall sl sr, String.length sl + String.length sr = String.length (sl ++ sr).
+Proof.
+  induction sl => sr; simpl; auto.
+  rewrite <- IHsl; auto.
+Qed.
+
 Lemma goodIndexLeft (tg sl sr : string) (i : nat) :
   isGoodIndex sl tg i -> isGoodIndex (sl ◇ sr) tg i.
 Proof.  
@@ -166,12 +161,6 @@ Lemma substring_append_left :
   substring i j sr = substring (i + length sl) j (sl ◇ sr).
 Admitted. (* Just like in liquid Haskell *)
     
-Lemma append_length_2 : 
-  forall sl sr, String.length sl + String.length sr = String.length (sl ++ sr).
-Proof.
-  induction sl => sr; simpl; auto.
-  rewrite <- IHsl; auto.
-Qed.
   
 Lemma shiftStringRightCorrect : 
   forall tg sl sr i, isGoodIndex sr tg i -> 
@@ -276,7 +265,6 @@ Proof.
   ssromega.
 Qed.
 
-
 Lemma isGoodIndexSmall x y tg i :
   i + String.length tg <= String.length x ->
   isGoodIndex (x ++ y) tg i ->
@@ -288,7 +276,7 @@ Proof.
 Qed.
     
 Lemma concatMakeNewIndices lo hi tg x y :
-  hi + String.length tg <= String.length x ->
+  hi - 1 + String.length tg <= String.length x ->
   makeIndices (x ++ y) tg lo hi = makeIndices x tg lo hi.
 Proof.
   unfold makeIndices.
@@ -471,7 +459,6 @@ Proof.
     assert (Aux : n = hi - lo.+1) by ssromega; rewrite Aux;
     eapply (IHcnt _ _ _ lo.+1 hi); eauto; ssromega.
 Qed.
-
       
 
 Lemma makeIndicesAppendRight tg sl sr lo hi :
@@ -643,56 +630,55 @@ WARNING: uncommenting this will take forever
 
 *)
 
-(* Intrinsic is needed for the monoid instance with a monoid instance... *)
-Instance monoid_SM (target : Symbol) : Monoid (SM target) :=
-  {
-    ε := Sm target "" nil;
-    mappend sm1 sm2 :=
-      let '(Sm x xis) := sm1 in
-      let '(Sm y yis) := sm2 in 
-      let xis' := xis in 
-      let xyis := makeNewIndices x y target in
-      let yis' := map (shiftStringRight target x y) yis in
-      Sm target (x ◇ y) (List.app xis' (List.app xyis yis'))
-  }.
-(* 
-Next Obligation.
-  eapply forall_append; eauto.
-  - induction xis; auto. 
-    constructor; inversion pf1; subst; eauto. 
-    apply goodIndexLeft; eauto.
-  - eapply forall_append; eauto.
-    + apply makeNewIndices_correct. 
-    + induction yis; simpl; auto.
-      constructor; inversion pf2; subst; eauto.
-      unfold shiftStringRight; simpl; auto.
-      eapply shiftStringRightCorrect; eauto.
-Defined. *)
-- simpl.
-  move => x y z; destruct x; destruct y; destruct z; simpl; auto.
-  rewrite string_app_assoc; simpl; auto.
-  f_equal.
-  rewrite -List.app_assoc; auto.
-  f_equal.
-  rewrite -!List.app_assoc; auto.
-  erewrite shiftDistributive; eauto.
-  erewrite shiftDistributive; eauto.
-  erewrite shiftTwice; eauto.
-  rewrite !List.app_assoc; auto.
-  f_equal.
-  (* This is the actual assocNewIndices I think. 
-     Renaming for compatibility *)
-  move: target input input0 input1 l l0 l1 => 
-        tg     xi yi zi x y z.
-  destruct (String.length tg <= String.length yi) eqn:LenTgYi.
-  + rewrite shiftIndexesLeft; eauto.
-    rewrite -!List.app_assoc; auto.
-    f_equal.
-    unfold shiftStringRight; simpl; auto.
-    f_equal.
-    apply shiftIndexesRight; eauto.
-  + 
+Definition toSM (tg x: string) := Sm tg x (makeIndices x tg 0 (length x)).
+Hint Unfold toSM.
 
+Theorem toSM_id : forall tg, toSM tg ε = sm_nil tg.
+  intros; simpl; auto.
+Qed.
 
-Admitted.
-  
+Lemma mergeNewIndices tg x y : 
+  String.length x > 0 ->
+  makeIndices (x ++ y) tg 0 (String.length x) =
+  (makeIndices x tg 0 (String.length x) ++ 
+  makeNewIndices x y tg)%list.
+Proof.
+  move => xlen.
+  unfold makeNewIndices; simpl.
+  destruct (String.length tg < 2) eqn:Len.
+  - rewrite List.app_nil_r.
+    rewrite concatMakeNewIndices; eauto. ssromega. 
+  - destruct (String.length x < String.length tg) eqn:Rel.
+    + erewrite (makeNewIndicesNullSmallInput x); simpl; eauto. 
+      assert (Hyp: String.length x - (String.length tg - 1) = 0) by ssromega.
+      rewrite Hyp; auto.
+    + erewrite (makeIndicesSplit (String.length x - (String.length tg - 1)) x); 
+      eauto; [ | ssromega].
+      assert (Hyp: makeIndices x tg (String.length x - (String.length tg - 1))
+                         (String.length x) = nil).
+      { (* Another example that should be omega'd away *)
+        eapply makeNewIndicesSmallIndex; try ssromega.
+        rewrite subnBA; try ssromega.
+        rewrite addnC.
+        auto.
+      } 
+      rewrite Hyp; rewrite List.app_nil_r; clear Hyp.
+      erewrite (makeIndicesAppendRight _ x y); eauto; try ssromega.
+      eapply  makeIndicesSplit; eauto; ssromega.
+Qed.
+
+Theorem toSM_append : forall tg x y, toSM tg (x ◇ y) = sm_mappend tg (toSM tg x) (toSM tg y).
+  move => tg x y; simpl.
+  unfold toSM; f_equal.
+  destruct (String.length x) eqn:LenX.
+  - destruct x; simpl in *; try congruence.
+    unfold makeNewIndices, makeIndices; simpl; rewrite subn0.
+    rewrite mapShiftZero; eauto.
+    destruct (String.length tg < 2); simpl; auto.
+  - rewrite List.app_assoc -LenX.
+    rewrite -mergeNewIndices; eauto.
+    rewrite shiftStringRight_append_front; auto.
+    simpl; rewrite -append_length_2 -addnC.
+    eapply makeIndicesSplit; eauto.
+    ssromega.
+Qed.
