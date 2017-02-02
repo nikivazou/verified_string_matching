@@ -65,7 +65,7 @@ import System.CPUTime
 #include "Proofs/ListLemmata.hs"
 #include "AutoProofs/ListMonoidLemmata.hs"
 #include "Proofs/ShiftingLemmata.hs"
-#include "Proofs/DistributeInput.hs"
+#include "AutoProofs/DistributeInput.hs"
 #include "Proofs/DistributeToSM.hs"
 
 #endif
@@ -160,7 +160,7 @@ toSMPar parfactor chunksize input
 -------------------------------------------------------------------------------
 ----------  Parallelization: pmconcat i is == mconcat is ----------------------
 -------------------------------------------------------------------------------
-#include "Proofs/PmconcatEquivalence.hs"
+#include "AutoProofs/PmconcatEquivalence.hs"
 
 
 -------------------------------------------------------------------------------
