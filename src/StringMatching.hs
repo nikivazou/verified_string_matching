@@ -86,13 +86,10 @@ import System.CPUTime
    -> {toSM is == toSMPar m n is } @-}
 
 correctness :: forall (target :: Symbol). (KnownSymbol target) => SM target -> RString -> Int -> Int -> Proof
-correctness _ is n m  
-  =   toSMPar m n is 
-  ==. (pmconcat m (map toSM (chunkString n is)) :: SM target)
-  ==. mconcat (map toSM (chunkString n is))
-       ? pmconcatEquivalence m (map toSM (chunkString n is) :: List (SM target))
+correctness t is n m  
+  =   (toSMPar m n is :: SM target)
   ==. toSM is 
-       ? distributionEq (mempty :: SM target) is n 
+       ? parallelismEquivalence (toSM :: RString -> SM target) (distributestoSM t) is n m 
   *** QED 
 
 
