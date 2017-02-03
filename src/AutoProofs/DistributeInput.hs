@@ -18,6 +18,8 @@ distributeInput f thm is n
   | stringLen is <= n || n <= 1
   =   mconcat (map f (chunkString n is))
   ==. mconcat (f is `C` map f N)
+  ==. (f is) <> (mconcat N)
+  ==. (f is) <> (mempty :: Monoid a)
   ==. f is ? mempty_left (f is)
   *** QED 
 distributeInput f thm is n  

@@ -18,6 +18,7 @@ type Monoid a = SM a
 {-@ LIQUID "--totality"            @-}
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--trust-internals"     @-}
+{-@ LIQUID "--no-measure-fields"   @-}
 {-@ LIQUID "--automatic-instances=liquidinstanceslocal" @-}
 
 {-@ infix <+> @-}
@@ -99,10 +100,18 @@ mconcatSplit :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) 
      / [i]
   @-} 
 mconcatSplit i N 
-  = mempty_left (mempty :: Monoid a)
+  = mconcat (take i N) <> mconcat (drop i N)
+  ==. mconcat N <> mconcat N
+      ? mempty_left (mempty :: Monoid a)
+  ==. (mempty :: Monoid a) 
+  *** QED 
 mconcatSplit i (C x xs)
   | i == 0
-  = mempty_right (mconcat (C x xs))
+  =   mconcat (take i (C x xs)) <> mconcat (drop i (C x xs))
+  ==. mconcat N <> mconcat (C x xs)
+--   ==. mempty <> (mconcat (C x xs))
+--   ==. mconcat (C x xs)
+      ? mempty_right (mconcat (C x xs))
   *** QED 
   | otherwise    
   =   mappend_assoc x (mconcat (take (i-1) xs)) (mconcat (drop (i-1) xs))
