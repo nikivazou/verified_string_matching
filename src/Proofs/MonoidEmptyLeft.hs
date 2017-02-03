@@ -48,9 +48,9 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #define CheckMonoidEmptyLeft
 #endif
 
+#ifdef CheckMonoidEmptyLeft
 mempty_left :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
 {-@ mempty_left :: xs:SM target -> {xs <> mempty == xs } @-}
-#ifdef CheckMonoidEmptyLeft
 mempty_left (SM i is) 
   = let tg = fromString (symbolVal (Proxy :: Proxy target)) in 
       (SM i is) <> (mempty :: SM target)
@@ -81,5 +81,7 @@ mempty_left (SM i is)
 
 
 #else
+mempty_left :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
+{-@ mempty_left :: xs:SM target -> {xs <> mempty == xs } @-}
 mempty_left _ = trivial  
 #endif

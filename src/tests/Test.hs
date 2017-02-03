@@ -132,9 +132,9 @@ liquidFiles
   = [ "ListMonoidLemmata.hs"
     , "PmconcatEquivalence.hs"
     , "MonoidEmptyLeft.hs"       -- make Auto
- --    , "MonoidEmptyRight.hs"
- --    , "MonoidEmptyAssoc.hs"
- --    , "DistributeInputSM.hs"
+    , "MonoidEmptyRight.hs"      -- make Auto
+    , "MonoidEmptyAssoc.hs"      -- make Auto
+    , "DistributeToSM.hs"        -- make Auto
     ]
 
 

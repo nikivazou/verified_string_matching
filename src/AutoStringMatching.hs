@@ -66,7 +66,6 @@ import System.CPUTime
 #include "AutoProofs/ListMonoidLemmata.hs"
 #include "Proofs/ShiftingLemmata.hs"
 #include "AutoProofs/DistributeInput.hs"
-#include "Proofs/DistributeToSM.hs"
 
 #endif
 
@@ -154,7 +153,7 @@ toSMPar parfactor chunksize input
 -------------------------------------------------------------------------------
 ----------  Proof that toSM distributes ---------------------------------------
 -------------------------------------------------------------------------------
-#include "Proofs/DistributeInputSM.hs"
+#include "Proofs/DistributeToSM.hs"
 
 
 -------------------------------------------------------------------------------
