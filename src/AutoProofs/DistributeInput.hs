@@ -27,7 +27,6 @@ distributeInput f thm is n
   &&& thm takeIs dropIs 
   &&& distributeInput f thm dropIs n  
   &&& (mconcat (map f (chunkString n is)) *** QED )
-  *** QED  
   where
     dropIs = dropString n is 
     takeIs = takeString n is 
