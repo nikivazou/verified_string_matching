@@ -63,7 +63,6 @@ parallelismEquivalence :: forall (target :: Symbol). (KnownSymbol target)
 parallelismEquivalence f thm is n m  
   =   pmconcatEquivalence m (map f (chunkString n is) :: List (Monoid target))
   &&& distributeInput f thm is n 
-  *** QED  
 
 
 
@@ -94,6 +93,11 @@ pmconcatEquivalence i xs
 
 {-@ automatic-instances mconcatSplit   @-}
 
+{- 
+NV: Note the unfolding here required becuase of the complicated SM type
+It is not required when I run only this file and not the SM 
+-}
+
 mconcatSplit :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof 
 {-@ mconcatSplit :: i:Nat -> xs:{List (Monoid a) | i <= llen xs} 
      -> { mconcat xs ==  mconcat (take i xs) <> mconcat (drop i xs)}
@@ -109,8 +113,6 @@ mconcatSplit i (C x xs)
   | i == 0
   =   mconcat (take i (C x xs)) <> mconcat (drop i (C x xs))
   ==. mconcat N <> mconcat (C x xs)
---   ==. mempty <> (mconcat (C x xs))
---   ==. mconcat (C x xs)
       ? mempty_right (mconcat (C x xs))
   *** QED 
   | otherwise    
