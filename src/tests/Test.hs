@@ -131,7 +131,7 @@ liquidFiles :: [String]
 liquidFiles 
   = [ "ListMonoidLemmata.hs"
     , "PmconcatEquivalence.hs"
- --    , "MonoidEmptyLeft.hs"
+    , "MonoidEmptyLeft.hs"       -- make Auto
  --    , "MonoidEmptyRight.hs"
  --    , "MonoidEmptyAssoc.hs"
  --    , "DistributeInputSM.hs"
