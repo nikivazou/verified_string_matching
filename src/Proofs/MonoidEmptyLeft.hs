@@ -20,7 +20,7 @@
 {-@ infix <+> @-}
 {-@ infix <>  @-}
 
-import RString.RString
+import Data.RString.RString
 import Language.Haskell.Liquid.ProofCombinators 
 
 import Data.Proxy 
@@ -30,13 +30,14 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
                       , take, drop  
                       , error, undefined
                       )
-#include "RList.hs"
-#include "StringMatching.hs"
+#include "../Data/List/RList.hs"
+#include "../Data/StringMatching/StringMatching.hs"
 
-#include "ListMonoidLemmata.hs"
-#include "EmptyLemmata.hs"
-#include "CastLemmata.hs"
-#include "ShiftingLemmata.hs"
+#include "../Proofs/ListLemmata.hs"
+#include "../Proofs/ListMonoidLemmata.hs"
+#include "../Proofs/EmptyLemmata.hs"
+#include "../Proofs/CastLemmata.hs"
+#include "../Proofs/ShiftingLemmata.hs"
 
 #define CheckMonoidEmptyLeft
 #endif

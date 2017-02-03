@@ -126,11 +126,36 @@ sep _ [] = []
 sep _ [x] = x 
 sep s (x:xs) = x ++ s ++ sep s xs 
 
+
+liquidFiles :: [String]
+liquidFiles 
+  = [ "ListMonoidLemmata.hs"
+    , "PmconcatEquivalence.hs"
+ --    , "MonoidEmptyLeft.hs"
+ --    , "MonoidEmptyRight.hs"
+ --    , "MonoidEmptyAssoc.hs"
+ --    , "DistributeInputSM.hs"
+    ]
+
+
+runLiquidProof :: String -> ExitCode -> IO ExitCode
+
+runLiquidProof fm i 
+  = do pf <- runCommand ("stack exec -- liquid src/Proofs"     ++ fm) >>= waitForProcess
+       ap <- runCommand ("stack exec -- liquid src/AutoProofs" ++ fm) >>= waitForProcess
+       return $ mconcat [i, pf, ap] 
+
 runLiquid :: ()   -> IO ExitCode
-runLiquid _ = 
-      runCommand "stack install liquidhaskell"
-  >>= waitForProcess
-  >>  runCommand "stack exec -- liquid src/StringMatching.hs"
-  >>= waitForProcess 
-  >>  runCommand "stack exec -- liquid src/AutoStringMatching.hs"
-  >>= waitForProcess 
+runLiquid _ = do 
+  e1 <- runCommand "stack install liquidhaskell" >>= waitForProcess
+  e2 <- runCommand "stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
+  e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess 
+  return $ mconcat [e1, e2, e3]
+
+
+instance Monoid ExitCode where
+  mempty = ExitSuccess
+  mappend (ExitFailure i) _ = ExitFailure i 
+  mappend _ (ExitFailure i) = ExitFailure i 
+  mappend _ _ = ExitSuccess  
+
