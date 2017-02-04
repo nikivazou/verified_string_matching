@@ -54,6 +54,10 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #include "../Proofs/emptyIndices.hs"   
 #endif
 
+#ifdef IncludedcastShift
+#else  
+#include "../Proofs/castShift.hs"   
+#endif
 
 #ifdef IncludedshiftNewIndicesRight
 #else  
@@ -163,8 +167,6 @@ makeIs3right tg xi yi zi yis
 makeIs4right tg xi yi zi     
   = makeNewIndices (xi <+> yi) zi tg
 
-
-
 assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) => 
   SM target -> RString -> RString -> RString -> RString -> List Int -> Proof
 {-@ assocNewIndices :: y:SM target -> tg:{RString | tg == target} -> xi:RString 
@@ -176,7 +178,7 @@ assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) =>
 assocNewIndices y tg xi yi zi yis 
   | stringLen tg <= stringLen yi 
   =   shiftNewIndicesLeft  xi yi zi tg 
-  &&& castEq3 tg xi yi zi yis  
+  &&& castShift tg xi yi zi yis  
   &&& shiftNewIndicesRight xi yi zi tg 
   *** QED 
   | stringLen yi < stringLen tg
