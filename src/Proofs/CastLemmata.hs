@@ -13,20 +13,6 @@ castAppend target input x is1 is2
   =   mapAppend (castGoodIndexRight target input x) is1 is2
   *** QED 
 
-castConcat :: RString -> RString -> RString -> RString -> List Int -> Proof
-{-@ castConcat :: tg:RString -> xi:RString -> yi:RString -> zi:RString 
-             ->  xis:List (GoodIndex xi tg) 
-        -> { map (castGoodIndexRight tg xi (yi <+> zi)) xis == map (castGoodIndexRight tg (xi <+> yi) zi) (map (castGoodIndexRight tg xi yi) xis)} @-}
-castConcat tg xi yi zi xis
-  =    map (castGoodIndexRight tg xi (yi <+> zi)) xis 
-  ==.  xis 
-       ? mapCastId tg xi (yi <+> zi) xis 
-  ==. (map (castGoodIndexRight tg xi yi) xis)
-       ? mapCastId tg xi yi xis  
-  ==. map (castGoodIndexRight tg (xi <+> yi) zi) (map (castGoodIndexRight tg xi yi) xis)
-       ? mapCastId tg (xi <+> yi) zi (map (castGoodIndexRight tg xi yi) xis) 
-  *** QED 
-
 castEq3 :: RString -> RString -> RString -> RString -> List Int -> Proof
 {-@ castEq3 :: tg:RString -> xi:RString -> yi:RString -> zi:RString 
              ->  yis:List (GoodIndex yi tg) 
@@ -39,15 +25,20 @@ castEq3 tg xi yi zi yis
         ? (mapShiftIndex tg xi yi zi yis &&& mapCastId tg yi zi yis)
   *** QED 
 
-
-mapCastId :: RString -> RString -> RString -> List Int -> Proof 
-{-@ mapCastId :: tg:RString -> x:RString -> y:RString -> is:List (GoodIndex x tg) -> 
-      {map (castGoodIndexRight tg x y) is == is} @-}
-mapCastId tg x y N 
-  = map (castGoodIndexRight tg x y) N ==. N *** QED 
-mapCastId tg x y (C i is) 
-  =   map (castGoodIndexRight tg x y) (C i is) 
-  ==. castGoodIndexRight tg x y i `C` map (castGoodIndexRight tg x y) is 
-  ==. i `C` is 
-       ? mapCastId tg x y is  
+{-@ mapShiftIndex :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> xs:List (GoodIndex yi tg)
+  -> {map (shiftStringRight tg xi yi) xs == map (shiftStringRight tg xi (yi <+> zi)) xs} / [llen xs] @-}
+mapShiftIndex :: RString -> RString -> RString -> RString -> List Int -> Proof
+mapShiftIndex tg xi yi zi N 
+  = map (shiftStringRight tg xi yi) N ==. N ==. map (shiftStringRight tg xi (yi <+> zi)) N *** QED 
+  *** QED 
+mapShiftIndex tg xi yi zi zs@(C i0 is0)
+  =   let is = cast (mapCastId tg yi zi is0) $ map (castGoodIndexRight tg yi zi) is0 
+          i  = castGoodIndexRight     tg yi zi i0  in 
+      map (shiftStringRight tg xi yi) (C i is) 
+  ==. C (shiftStringRight tg xi yi i) (map (shiftStringRight tg xi yi) is)
+  ==. C (shift (stringLen xi) i) (map (shiftStringRight tg xi yi) is)
+  ==. C (shiftStringRight tg xi (yi <+> zi) i) (map (shiftStringRight tg xi yi) is)
+  ==. C (shiftStringRight tg xi (yi <+> zi) i) (map (shiftStringRight tg xi (yi <+> zi)) is)
+       ? mapShiftIndex tg xi yi zi is
+  ==. map (shiftStringRight tg xi (yi <+> zi)) (C i is)
   *** QED 

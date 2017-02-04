@@ -84,7 +84,7 @@ makeNewIndices s1 s2 target
   | stringLen target < 2 
   = N
   | otherwise
-  = makeIndices ((<+>) s1 s2) target
+  = makeIndices (s1 <+> s2) target
                 (maxInt (stringLen s1 - (stringLen target-1)) 0)
                 (stringLen s1 - 1)
 

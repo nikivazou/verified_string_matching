@@ -86,6 +86,10 @@ stringRightId :: RString -> Proof
 {-@ assume stringRightId :: x:RString -> {stringEmp <+> x == x} @-}
 stringRightId _ = trivial
 
+stringAssoc :: RString -> RString -> RString -> Proof
+{-@ assume stringAssoc :: x:RString -> y:RString -> z:RString 
+     -> {(x <+> y) <+> z == x <+> (y <+> z) } @-}
+stringAssoc _ _ _ = trivial
 ------------------------------------------------------------------------------
 ---------------  Properties assumed for RStrings ---------------------------
 ------------------------------------------------------------------------------

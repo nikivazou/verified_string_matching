@@ -34,17 +34,50 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs"  
 #include "../Data/StringMatching/StringMatching.hs"
-
 #include "../Proofs/ListMonoidLemmata.hs"
+
+
+#ifdef IncludedListLemmata
+#else  
+#include "../Proofs/ListLemmata.hs"   
+#endif
+
 #include "../Proofs/CastLemmata.hs"
 #include "../Proofs/EmptyLemmata.hs"
-#include "../Proofs/ListLemmata.hs"
 #include "../Proofs/ShiftingLemmata.hs"
 
 #define CheckMonoidAssoc
 #endif
 
+#ifdef IncludedemptyIndices
+#else  
+#include "../Proofs/emptyIndices.hs"   
+#endif
+
+
+#ifdef IncludedshiftNewIndicesRight
+#else  
+#include "../Proofs/shiftNewIndicesRight.hs"   
+#endif
+
+
+#ifdef IncludedshiftNewIndicesLeft
+#else  
+#include "../Proofs/shiftNewIndicesLeft.hs"   
+#endif
+
+
+#ifdef IncludedmapLenFusion
+#else  
+#include "../Proofs/mapLenFusion.hs"   
+#endif
+
+#ifdef IncludedcastConcat
+#else  
+#include "../Proofs/castConcat.hs"   
+#endif
 #ifdef CheckMonoidAssoc 
+
 
 {-@ mappend_assoc :: x:SM target -> y:SM target -> z:SM target -> { x <> (y <> z) = (x <> y) <> z} @-}
 mappend_assoc
@@ -56,7 +89,7 @@ mappend_assoc x@(SM xi xis) y@(SM yi yis) z@(SM zi zis)
   ==. (SM xi xis) <> ((SM yi yis) <> (SM zi zis))
   ==. (SM xi xis) <> (SM (yi <+> zi) (yzileft `append` yzinew `append` yziright)) 
   ==. SM input (is1left `append` is2left `append` (map (shiftStringRight tg xi (yi <+> zi)) yzi))
-      ? concatStringAssoc xi yi zi 
+      ? stringAssoc xi yi zi 
   ==. SM input (is1left `append` is2left `append` (map (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) `append` is5left))
       ? mapAppend (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) yziright 
   ==. SM input (is1left `append` is2left `append` (is3left `append` is4left `append` is5left))
@@ -120,7 +153,6 @@ makeIs3left tg xi yi zi yis
 makeIs4left tg xi yi zi     
   = map (shiftStringRight tg xi (yi <+> zi)) (makeNewIndices yi zi tg)
 
-
 {-@ inline makeIs3right @-}
 {-@ inline makeIs4right @-}
 {-@ inline makeIs2right @-}
@@ -143,20 +175,20 @@ assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) =>
         append (append (makeIs2right tg xi yi zi) (makeIs3right tg xi yi zi yis)) (makeIs4right tg xi yi zi)}  @-}
 assocNewIndices y tg xi yi zi yis 
   | stringLen tg <= stringLen yi 
-  =   shiftIndexesLeft xi yi zi tg 
+  =   shiftNewIndicesLeft  xi yi zi tg 
   &&& castEq3 tg xi yi zi yis  
-  &&& shiftIndexesRight xi yi zi tg 
+  &&& shiftNewIndicesRight xi yi zi tg 
   *** QED 
   | stringLen yi < stringLen tg
   =   is2left  `append` is3left  `append` is4left
   ==. is2left  `append` N  `append` is4left
       ? emptyIndices y yis 
   ==. is2left `append` is4left
-      ? appendNil is2left
+      ? listLeftId is2left
   ==. is2right `append` is4right 
       ? shiftNewIndices xi yi zi tg 
   ==. (is2right `append` N) `append` is4right 
-      ? appendNil is2right
+      ? listLeftId is2right
   ==. (is2right `append` is3right) `append` is4right 
       ? emptyIndices y yis 
   *** QED 
