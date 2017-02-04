@@ -49,6 +49,8 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #include "../Proofs/mapCastId.hs"   
 #endif
 
+#define IncludedMonoidEmptyLeft
+
 #ifdef CheckMonoidEmptyLeft
 smLeftId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
 {-@ smLeftId :: xs:SM target -> {xs <> mempty == xs } @-}

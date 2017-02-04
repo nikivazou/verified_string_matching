@@ -49,7 +49,7 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #include "../Proofs/mapShiftZero.hs"
 #endif
 
-
+#define IncludedMonoidEmptyRight
 #ifdef CheckMonoidEmptyRight
 
 smRightId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
