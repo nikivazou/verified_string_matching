@@ -82,6 +82,9 @@ stringLeftId :: RString -> Proof
 stringLeftId _ = trivial
 
 
+stringRightId :: RString -> Proof
+{-@ assume stringRightId :: x:RString -> {stringEmp <+> x == x} @-}
+stringRightId _ = trivial
 
 ------------------------------------------------------------------------------
 ---------------  Properties assumed for RStrings ---------------------------

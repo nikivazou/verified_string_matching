@@ -32,36 +32,42 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
                       )
 #define MainCall
 
-#include "../Data/List/RList.hs"  -- REQUIRED 
-#include "../Data/StringMatching/StringMatching.hs" -- REQUIRED 
-
-
-
-#include "../Proofs/ListMonoidLemmata.hs" 
-#include "../Proofs/EmptyLemmata.hs"      
+#include "../Data/List/RList.hs"  
+#include "../Data/StringMatching/StringMatching.hs" 
+#include "../Proofs/ListMonoidLemmata.hs"       
 
 #define CheckMonoidEmptyRight
+#endif
+
+#ifdef IncludedmakeNewIndicesNullRight
+#else
+#include "../Proofs/makeNewIndicesNullRight.hs"
+#endif
+
+#ifdef IncludedmapShiftZero
+#else
+#include "../Proofs/mapShiftZero.hs"
 #endif
 
 
 #ifdef CheckMonoidEmptyRight
 
-mempty_right :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
-{-@ mempty_right :: xs:SM target -> {mempty <> xs == xs } @-}
-mempty_right (SM i is)
+smRightId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
+{-@ smRightId :: xs:SM target -> {mempty <> xs == xs } @-}
+smRightId (SM i is)
   =   let tg = (fromString (symbolVal (Proxy :: Proxy target))) in 
       (mempty :: SM target) <> (SM i is) 
   ==. (SM stringEmp N) <> (SM i is) 
-  ==. SM ((<+>) stringEmp i)
+  ==. SM (stringEmp <+> i)
        ((map (castGoodIndexRight tg stringEmp i) N
           `append`
         makeNewIndices stringEmp i tg 
        ) `append`
        (map (shiftStringRight tg stringEmp i) is)) 
-       ? concatStringNeutralRight i
+       ? stringRightId i
   ==. SM i
-        ((N`append` makeNewIndices stringEmp i tg
-        ) `append`
+        ((N `append` makeNewIndices stringEmp i tg)
+         `append`
         (map (shiftStringRight tg stringEmp i) is)) 
   ==. SM i
        (makeNewIndices stringEmp i tg
@@ -73,6 +79,10 @@ mempty_right (SM i is)
        ? mapShiftZero tg i is 
   ==. SM i is 
   *** QED 
+
+mempty_right :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
+{-@ mempty_right :: xs:SM target -> {mempty <> xs == xs } @-}
+mempty_right = smRightId
 
 
 #else
