@@ -11,43 +11,6 @@ emptyIndices (SM _ _) N
 emptyIndices (SM _ _) (C _ _)
   = trivial 
 
-makeNewIndicesNullLeft :: RString -> RString -> Proof 
-{-@ makeNewIndicesNullLeft 
-  :: s:RString 
-  -> t:RString 
-  -> {makeNewIndices s stringEmp t == N } @-} 
-makeNewIndicesNullLeft s t 
-  | stringLen t < 2 
-  = makeNewIndices s stringEmp t ==. N *** QED 
-makeNewIndicesNullLeft  s t 
-  | 1 + stringLen s <= stringLen t
-  =   makeNewIndices s stringEmp t
-  ==. makeIndices ((<+>) s stringEmp) t
-                   (maxInt (1 + stringLen s - stringLen t)  0)
-                   (stringLen s - 1)
-  ==. makeIndices s t
-                   0
-                   (stringLen s - 1) 
-                   ? concatStringNeutralLeft s
-  ==. makeIndices s t
-                   0
-                   (stringLen s - 1)
-  ==. N ? makeNewIndicesNullSmallInput s t 0 (stringLen s - 1)
-  *** QED 
-makeNewIndicesNullLeft s t 
-  =   makeNewIndices s stringEmp t
-  ==. makeIndices ((<+>) s stringEmp) t
-                   (maxInt (1 + stringLen s - stringLen t)  0)
-                   (stringLen s - 1)
-  ==. makeIndices ((<+>) s stringEmp) t
-                   (1 + stringLen s - stringLen t)
-                   (stringLen s - 1)
-  ==. makeIndices s t
-                   (1 + stringLen s - stringLen t)
-                   (stringLen s - 1) ? concatStringNeutralLeft s 
-  ==. N ? makeNewIndicesNullSmallIndex s t (1 + stringLen s - stringLen t) (stringLen s - 1)
-  *** QED 
-
 makeNewIndicesNullSmallInput :: RString -> RString -> Int -> Int -> Proof 
 {-@ makeNewIndicesNullSmallInput 
   :: s:RString 

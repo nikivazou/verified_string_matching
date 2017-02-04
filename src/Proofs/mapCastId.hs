@@ -1,3 +1,5 @@
+#define IncludedmapCastId
+
 mapCastId :: RString -> RString -> RString -> List Int -> Proof 
 {-@ mapCastId :: tg:RString -> x:RString -> y:RString -> is:List (GoodIndex x tg) -> 
       {map (castGoodIndexRight tg x y) is == is} @-}

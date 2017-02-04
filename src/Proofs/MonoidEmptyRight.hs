@@ -37,8 +37,8 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 
 
-#include "../Proofs/ListMonoidLemmata.hs" -- REQUIRED listLeftId
-#include "../Proofs/EmptyLemmata.hs"      -- REQUIRED  makeNewIndicesNullLeft
+#include "../Proofs/ListMonoidLemmata.hs" 
+#include "../Proofs/EmptyLemmata.hs"      
 
 #define CheckMonoidEmptyRight
 #endif

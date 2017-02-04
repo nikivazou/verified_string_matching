@@ -39,10 +39,18 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 
 #include "../Proofs/ListMonoidLemmata.hs" -- REQUIRED listLeftId
-#include "../Proofs/makeNewIndicesNullLeft.hs"      -- REQUIRED  makeNewIndicesNullLeft
-#include "../Proofs/mapCastId.hs"        -- REQUIRED mapCastId
 
 #define CheckMonoidEmptyLeft
+#endif
+
+#ifdef IncludedmakeNewIndicesNullLeft
+#else  
+#include "../Proofs/makeNewIndicesNullLeft.hs"   
+#endif
+
+#ifdef IncludedmapCastId
+#else  
+#include "../Proofs/mapCastId.hs"   
 #endif
 
 #ifdef CheckMonoidEmptyLeft
