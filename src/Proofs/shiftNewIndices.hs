@@ -18,6 +18,16 @@
 #include "../Proofs/makeIndicesNull.hs"   
 #endif
 
+#ifdef IncludedcatIndices
+#else  
+#include "../Proofs/catIndices.hs"   
+#endif
+
+#ifdef IncludedmergeIndices
+#else  
+#include "../Proofs/mergeIndices.hs"   
+#endif
+
 -------------------------------------------------------------------------------
 ----------  Lemmata on Shifting Indices ---------------------------------------
 -------------------------------------------------------------------------------

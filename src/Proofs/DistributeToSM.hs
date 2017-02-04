@@ -125,7 +125,7 @@ mergeNewIndices tg x1 x2
   =   makeSMIndices x1 tg        `append` makeNewIndices x1 x2 tg
   ==. makeIndices x1 tg 0 hi     `append` makeNewIndices x1 x2 tg
   ==. N                          `append` makeIndices x tg 0  hi
-      ? makeNewIndicesNullSmallInput x1 tg 0 hi
+      ? makeIndicesNull x1 tg 0 hi
   ==. makeIndices x  tg 0 hi
   *** QED 
   | otherwise {- stringLen tg <= stringLen x1 -}

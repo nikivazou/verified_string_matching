@@ -6,7 +6,9 @@ makeIndicesNull :: RString -> RString -> Int -> Int -> Proof
   -> t:RString
   -> lo:Nat 
   -> hi:{Int | (stringLen t < 2 + stringLen s && 1 + stringLen s - stringLen t <= lo && lo <= hi)
-             || (1 + stringLen s <= stringLen t)}
+             || (1 + stringLen s <= stringLen t)
+             || (stringLen s < lo + stringLen t)
+             || (stringLen s < stringLen t)}
   -> {makeIndices s t lo hi == N } / [hi - lo +1] @-} 
 makeIndicesNull s1 t lo hi
   | hi < lo 

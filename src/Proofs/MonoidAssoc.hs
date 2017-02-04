@@ -36,17 +36,17 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #include "../Data/StringMatching/StringMatching.hs"
 #include "../Proofs/ListMonoidLemmata.hs"
 
-
 #ifdef IncludedListLemmata
 #else  
 #include "../Proofs/ListLemmata.hs"   
 #endif
 
-#include "../Proofs/CastLemmata.hs"
-#include "../Proofs/EmptyLemmata.hs"
-#include "../Proofs/ShiftingLemmata.hs"
-
 #define CheckMonoidAssoc
+#endif
+
+#ifdef IncludedshiftNewIndices
+#else  
+#include "../Proofs/shiftNewIndices.hs"   
 #endif
 
 #ifdef IncludedemptyIndices

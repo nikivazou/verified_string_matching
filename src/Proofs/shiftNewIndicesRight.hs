@@ -63,7 +63,7 @@ shiftIndicesRight lo hi x input target
   ==. (stringLen x + lo) `C` N
   ==. (stringLen x + lo) `C` makeIndices (x <+> input) target (stringLen x + lo + 1) (stringLen x + hi)
   ==. makeIndices (x <+> input) target (stringLen x + lo) (stringLen x + hi)
-     ? isGoodIndexConcatFront input x target lo  
+     ? isGoodIxConcatFront input x target lo  
   *** QED 
   | lo == hi
   =   map (shiftStringRight target x input) (makeIndices input target lo hi)
@@ -72,7 +72,7 @@ shiftIndicesRight lo hi x input target
   ==. N
   ==. makeIndices (x <+> input) target (stringLen x + lo + 1) (stringLen x + hi)
   ==. makeIndices (x <+> input) target (stringLen x + lo) (stringLen x + hi)
-     ? isGoodIndexConcatFront input x target lo 
+     ? isGoodIxConcatFront input x target lo 
   *** QED 
 
 shiftIndicesRight lo hi x input target
@@ -84,7 +84,7 @@ shiftIndicesRight lo hi x input target
       ? shiftIndicesRight (lo+1) hi x input target
   ==. (stringLen x + lo) `C` (makeIndices ((<+>) x input) target (stringLen x + (lo+1)) (stringLen x + hi))
   ==. makeIndices ((<+>) x input) target (stringLen x + lo) (stringLen x + hi)
-      ? isGoodIndexConcatFront input x target lo 
+      ? isGoodIxConcatFront input x target lo 
   *** QED 
   | otherwise
   =   map (shiftStringRight target x input) (makeIndices input target lo hi)
@@ -92,16 +92,16 @@ shiftIndicesRight lo hi x input target
   ==. makeIndices ((<+>) x input) target (stringLen x + (lo+1)) (stringLen x + hi)
       ? shiftIndicesRight (lo+1) hi x input target
   ==. makeIndices ((<+>) x input) target (stringLen x + lo) (stringLen x + hi)
-     ? isGoodIndexConcatFront input x target lo 
+     ? isGoodIxConcatFront input x target lo 
   *** QED 
 
 
-{-@ isGoodIndexConcatFront 
+{-@ isGoodIxConcatFront 
   :: input:RString -> input':RString -> tg:RString -> i:Nat
   -> {(isGoodIndex input tg i) <=> (isGoodIndex (input' <+> input) tg (stringLen input' + i)) 
      } @-}
-isGoodIndexConcatFront :: RString -> RString -> RString -> Int -> Proof 
-isGoodIndexConcatFront input input' tg i 
+isGoodIxConcatFront :: RString -> RString -> RString -> Int -> Proof 
+isGoodIxConcatFront input input' tg i 
   =   isGoodIndex input tg i 
   ==. (subString input i (stringLen tg)  == tg  
       && i + stringLen tg <= stringLen input 
