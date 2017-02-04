@@ -37,21 +37,18 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/StringMatching/StringMatching.hs"
 
-#include "../Proofs/ListLemmata.hs"
-#include "../Proofs/ShiftingLemmata.hs"
-
 
 #include "../Proofs/ListMonoidLemmata.hs" -- REQUIRED listLeftId
-#include "../Proofs/EmptyLemmata.hs"      -- REQUIRED  makeNewIndicesNullLeft
-#include "../Proofs/CastLemmata.hs"        -- REQUIRED mapCastId
+#include "../Proofs/makeNewIndicesNullLeft.hs"      -- REQUIRED  makeNewIndicesNullLeft
+#include "../Proofs/mapCastId.hs"        -- REQUIRED mapCastId
 
 #define CheckMonoidEmptyLeft
 #endif
 
 #ifdef CheckMonoidEmptyLeft
-mempty_left :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
-{-@ mempty_left :: xs:SM target -> {xs <> mempty == xs } @-}
-mempty_left (SM i is) 
+smLeftId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
+{-@ smLeftId :: xs:SM target -> {xs <> mempty == xs } @-}
+smLeftId (SM i is) 
   = let tg = fromString (symbolVal (Proxy :: Proxy target)) in 
       (SM i is) <> (mempty :: SM target)
   ==. (SM i is) <> (SM stringEmp N) 
@@ -61,7 +58,7 @@ mempty_left (SM i is)
            makeNewIndices i stringEmp tg 
          ) `append`
          (map (shiftStringRight tg i stringEmp) N))
-      ? concatStringNeutralLeft i 
+      ? stringLeftId i 
   ==. SM i
          ((map (castGoodIndexRight tg i stringEmp) is
             `append`
@@ -79,7 +76,9 @@ mempty_left (SM i is)
   *** QED 
 
 
-
+mempty_left :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
+{-@ mempty_left :: xs:SM target -> {xs <> mempty == xs } @-}
+mempty_left = smLeftId
 #else
 mempty_left :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
 {-@ mempty_left :: xs:SM target -> {xs <> mempty == xs } @-}

@@ -72,6 +72,17 @@ fromString = S . ST.fromString
 isNullString :: RString -> Bool 
 isNullString (S s) = BS.length s == 0 
 
+
+------------------------------------------------------------------------------
+---------------  RStrings is Monoid ---------------------------
+------------------------------------------------------------------------------
+
+stringLeftId :: RString -> Proof
+{-@ assume stringLeftId :: x:RString -> { x <+> stringEmp == x} @-}
+stringLeftId _ = trivial
+
+
+
 ------------------------------------------------------------------------------
 ---------------  Properties assumed for RStrings ---------------------------
 ------------------------------------------------------------------------------
@@ -82,9 +93,13 @@ isNullString (S s) = BS.length s == 0
 stringEmpProp :: RString -> Proof
 stringEmpProp _ = trivial 
  
+
 concatStringNeutralLeft :: RString -> Proof
 {-@ assume concatStringNeutralLeft :: x:RString -> { x <+> stringEmp == x} @-}
 concatStringNeutralLeft _ = trivial
+
+
+
 
 concatStringNeutralRight :: RString -> Proof
 {-@ assume concatStringNeutralRight :: x:RString -> {stringEmp <+> x == x} @-}
