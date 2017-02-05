@@ -44,10 +44,15 @@ import Data.RString.RString
 #include "../Data/RString/Chunk.hs"
 #include "../Data/List/MList.hs"
 #include "../Data/Monoid/PMonoid.hs"
-#include "../Proofs/DistributeInput.hs"
 
 #endif
 
+
+#ifdef IncludeddistributeInput
+#else  
+#include "../Proofs/DistributeInput.hs"
+#endif
+IncludeddistributeInput
 
 {-@ parallelismEquivalence :: 
       f:(RString -> Monoid target) 

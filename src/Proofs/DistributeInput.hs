@@ -1,3 +1,5 @@
+#define IncludeddistributeInput
+
 {-@ distributeInput
      :: f:(RString -> Monoid a)
      -> thm:(x1:RString -> x2:RString -> {f (x1 <+> x2) ==  (f x1) <> (f x2)} )

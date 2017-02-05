@@ -36,12 +36,14 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #include "../Data/StringMatching/StringMatching.hs"
 #include "../Proofs/ListMonoidLemmata.hs"
 
+
+
+#define CheckMonoidAssoc
+#endif
+
 #ifdef IncludedListLemmata
 #else  
 #include "../Proofs/ListLemmata.hs"   
-#endif
-
-#define CheckMonoidAssoc
 #endif
 
 #ifdef IncludedshiftNewIndices
@@ -80,6 +82,9 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #else  
 #include "../Proofs/castConcat.hs"   
 #endif
+
+#define IncludedMonoidAssoc
+
 #ifdef CheckMonoidAssoc 
 
 

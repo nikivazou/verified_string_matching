@@ -142,15 +142,15 @@ runLiquidProof :: String -> ExitCode -> IO ExitCode
 
 runLiquidProof fm i 
   = do pf <- runCommand ("stack exec -- liquid src/Proofs"     ++ fm) >>= waitForProcess
-       ap <- runCommand ("stack exec -- liquid src/AutoProofs" ++ fm) >>= waitForProcess
-       return $ mconcat [i, pf, ap] 
+    --    ap <- runCommand ("stack exec -- liquid src/AutoProofs" ++ fm) >>= waitForProcess
+       return $ mconcat [i, pf] 
 
 runLiquid :: ()   -> IO ExitCode
 runLiquid _ = do 
   e1 <- runCommand "stack install liquidhaskell" >>= waitForProcess
   e2 <- runCommand "stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
-  e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess 
-  return $ mconcat [e1, e2, e3]
+--   e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess 
+  return $ mconcat [e1, e2]
 
 
 instance Monoid ExitCode where

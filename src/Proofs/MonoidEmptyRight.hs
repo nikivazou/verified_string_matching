@@ -50,6 +50,7 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #endif
 
 #define IncludedMonoidEmptyRight
+
 #ifdef CheckMonoidEmptyRight
 
 smRightId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
