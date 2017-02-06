@@ -45,9 +45,15 @@ import Data.RString.RString
 #include "../Data/RString/Chunk.hs"
 #include "../Data/List/MList.hs"
 #include "../Data/Monoid/PMonoid.hs"
-#include "../AutoProofs/DistributeInput.hs"
 
 #endif
+
+#ifdef IncludeddistributeInput
+#else  
+#include "../Proofs/DistributeInput.hs"
+#endif
+IncludeddistributeInput
+
 
 {-@ automatic-instances parallelismEquivalence   @-}
 {-@ parallelismEquivalence :: 
@@ -64,30 +70,22 @@ parallelismEquivalence f thm is n m
   =   pmconcatEquivalence m (map f (chunkString n is) :: List (Monoid target))
   &&& distributeInput f thm is n 
 
-
-
-pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof
-{-@ pmconcatEquivalence :: i:Int -> is:List (Monoid a) -> {pmconcat i is == mconcat is} / [llen is] @-}
-
 #ifdef CheckParEquivalence
 
 {-@ automatic-instances pmconcatEquivalence   @-}
 
+pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof
+{-@ pmconcatEquivalence :: i:Int -> is:List (Monoid a) -> {pmconcat i is == mconcat is} / [llen is] @-}
 pmconcatEquivalence i is 
-  | i <= 1
-  = trivial
-pmconcatEquivalence i N 
-  =   trivial
-pmconcatEquivalence i (C x N) 
-  = mempty_left x
-pmconcatEquivalence i xs 
-  | llen xs <= i 
-  = trivial
-pmconcatEquivalence i xs
-  =   pmconcat i xs
-  ==. mconcat xs 
-  ?   mconcatChunk i xs &&& pmconcatEquivalence i (map mconcat (chunk i xs))
-  *** QED 
+  | i <= 1 || llen is <= i 
+  = trivial  
+pmconcatEquivalence i issssss
+  =   pmconcatEquivalence i (map mconcat (chunk i issssss))
+  &&& mconcatChunk i issssss
+
+-- NV The above needs intermediate calculations, 
+-- bevause pmconcat i is == pmconcat (map mconcat (chunk i is))
+-- is all I need but chunk can get further evaluated
 
 -- | Monoid implications 
 
@@ -104,48 +102,32 @@ mconcatSplit :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) 
      / [i]
   @-} 
 mconcatSplit i N 
-  = mconcat (take i N) <> mconcat (drop i N)
-  ==. mconcat N <> mconcat N
-      ? mempty_left (mempty :: Monoid a)
-  ==. (mempty :: Monoid a) 
-  *** QED 
+  = mempty_left (mempty :: Monoid a)
 mconcatSplit i (C x xs)
   | i == 0
-  =   mconcat (take i (C x xs)) <> mconcat (drop i (C x xs))
-  ==. mconcat N <> mconcat (C x xs)
-      ? mempty_right (mconcat (C x xs))
-  *** QED 
+  = mempty_right (mconcat (C x xs))
   | otherwise    
   =   mappend_assoc x (mconcat (take (i-1) xs)) (mconcat (drop (i-1) xs))
   &&& mconcatSplit (i-1) xs
 
 -- Generalization to chunking  
 
+{-@ automatic-instances mconcatChunk @-}
 mconcatChunk :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof 
 {-@ mconcatChunk :: i:Pos -> xs:List (Monoid a) 
   -> { mconcat xs == mconcat (map mconcat (chunk i xs))}
   /  [llen xs] @-}
 mconcatChunk i xs  
   | llen xs <= i 
-  =   mconcat (map mconcat (chunk i xs))
-  ==. mconcat (map mconcat (C xs N))
-  ==. mconcat (mconcat xs `C` map mconcat N)
-  ==. mconcat xs <> mconcat N
-  ==. mconcat xs 
-       ? mempty_left (mconcat xs)
-  *** QED  
-   | otherwise
-   =   mconcat (map mconcat (chunk i xs))
-   ==. mconcat (map mconcat (take i xs `C` chunk i (drop i xs)))
-   ==. mconcat (mconcat (take i xs) `C` map mconcat (chunk i (drop i xs)))
-   ==. mconcat (take i xs) <> (mconcat (drop i xs))
-        ? mconcatChunk i (drop i xs)
-   ==. mconcat xs 
-        ? mconcatSplit i xs 
-   *** QED 
+  = mempty_left (mconcat xs)
+  | otherwise
+   =   mconcatChunk i (drop i xs)
+   &&& mconcatSplit i xs 
 
 
 #else
+pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof
+{-@ pmconcatEquivalence :: i:Int -> is:List (Monoid a) -> {pmconcat i is == mconcat is} / [llen is] @-}
 pmconcatEquivalence _ _ = trivial     
 #endif
 
