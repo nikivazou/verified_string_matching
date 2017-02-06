@@ -60,17 +60,11 @@ import System.CPUTime
 #define CheckDistributeInput
 #define CheckParEquivalence
 
-#include "Proofs/CastLemmata.hs"
-#include "Proofs/EmptyLemmata.hs"
-#include "Proofs/ListLemmata.hs"
-#include "AutoProofs/ListMonoidLemmata.hs"
-#include "Proofs/ShiftingLemmata.hs"
-#include "AutoProofs/DistributeInput.hs"
-
 #endif
 
 
 #include "Data/List/RList.hs"
+#include "Proofs/ListMonoidLemmata.hs"
 #include "Data/StringMatching/StringMatching.hs"
 #include "Data/Monoid/PMonoid.hs"
 #include "Data/RString/Chunk.hs"
@@ -159,13 +153,28 @@ toSMPar parfactor chunksize input
 -------------------------------------------------------------------------------
 ----------  Parallelization: pmconcat i is == mconcat is ----------------------
 -------------------------------------------------------------------------------
-#include "AutoProofs/PmconcatEquivalence.hs"
+#include "Proofs/PmconcatEquivalence.hs"
 
 
 -------------------------------------------------------------------------------
 ----------  Proof that SM is a Monoid -----------------------------------------
 -------------------------------------------------------------------------------
 
-#include "Proofs/MonoidEmptyLeft.hs"
-#include "Proofs/MonoidEmptyRight.hs"
+#ifdef IncludedMonoidEmptyRight
+#else  
+#include "../Proofs/MonoidEmptyRight.hs"   
+#endif
+
+#ifdef IncludedMonoidEmptyLeft
+#else  
+#include "../Proofs/MonoidEmptyLeft.hs"   
+#endif
+#ifdef IncludedMonoidEmptyRight
+#else  
+#include "../Proofs/MonoidEmptyRight.hs"   
+#endif
+
+#ifdef IncludedMonoidAssoc
+#else  
 #include "Proofs/MonoidAssoc.hs"
+#endif

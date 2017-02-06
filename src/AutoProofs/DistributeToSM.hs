@@ -31,27 +31,62 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
                       , error, undefined 
                       )
 #define MainCall
-#define CheckMonoidEmptyLeft
-#define CheckMonoidEmptyRight
-
-#include "../Data/List/RList.hs"
-#include "../Data/StringMatching/StringMatching.hs"
-
-#include "../Proofs/MonoidEmptyLeft.hs"
-#include "../Proofs/MonoidEmptyRight.hs"
-
-#include "../Proofs/ListMonoidLemmata.hs"
-#include "../Proofs/CastLemmata.hs"
-#include "../Proofs/EmptyLemmata.hs"
-#include "../Proofs/ListLemmata.hs"
-#include "../Proofs/ShiftingLemmata.hs"
-
 #define CheckDistributeInput
+#define CheckMonoidEmptyRight
+#define CheckMonoidEmptyLeft
+
+#include "../Data/List/RList.hs"  
+#include "../Data/StringMatching/StringMatching.hs"
+#include "../Proofs/ListMonoidLemmata.hs"
+
+#ifdef IncludedListLemmata
+#else  
+#include "../Proofs/ListLemmata.hs"   
 #endif
 
+#endif
 
+#ifdef IncludedtoSMEmpty
+#else  
+#include "../Proofs/toSMEmpty.hs"   
+#endif
 
-#ifdef CheckDistributeInput
+#ifdef IncludedMonoidEmptyRight
+#else  
+#include "../Proofs/MonoidEmptyRight.hs"   
+#endif
+
+#ifdef IncludedMonoidEmptyLeft
+#else  
+#include "../Proofs/MonoidEmptyLeft.hs"   
+#endif
+
+#ifdef IncludedmapCastId
+#else  
+#include "../Proofs/mapCastId.hs"   
+#endif
+
+#ifdef IncludedshiftIndicesRight
+#else  
+#include "../Proofs/shiftIndicesRight.hs"   
+#endif
+
+#ifdef IncludedmergeIndices
+#else  
+#include "../Proofs/mergeIndices.hs"   
+#endif
+
+#ifdef IncludedcatIndices
+#else  
+#include "../Proofs/catIndices.hs"   
+#endif
+
+#ifdef IncludedconcatMakeIndices
+#else  
+#include "../Proofs/concatMakeIndices.hs"   
+#endif
+
+#ifdef CheckDistributeInput 
 distributestoSM :: forall (target :: Symbol). (KnownSymbol target) => SM target -> RString -> RString -> Proof 
 {-@ distributestoSM :: SM target -> x1:RString -> x2:RString 
   -> {toSM (x1 <+> x2) ==  (toSM x1) <> (toSM x2)} @-} 
@@ -59,9 +94,9 @@ distributestoSM x x1 x2
   | stringLen x1 == 0 
   =   (toSM x1) <> (toSM x2)
   ==. (mempty :: SM target) <> (toSM x2 :: SM target)
-       ? toSMEmpty x x1
+      ?toSMEmpty x x1
   ==. toSM x2 
-      ? mempty_right (toSM x2 :: SM target)
+      ? smRightId (toSM x2 :: SM target)
   ==. toSM (x1 <+> x2)
       ? concatEmpLeft x1 x2 
   *** QED 
@@ -72,7 +107,7 @@ distributestoSM x x1 x2
   ==. (toSM x1) <> (mempty :: SM target)
       ? toSMEmpty x x2  
   ==. (toSM x1 :: SM target)
-      ? mempty_left (toSM x1 :: SM target)
+      ? smLeftId (toSM x1 :: SM target)
   ==. toSM (x1 <+> x2)
       ? concatEmpRight x1 x2 
   *** QED 
@@ -84,9 +119,9 @@ distributestoSM _ x y
   ==. SM i (makeIndices i tg 0 hi1 `append` yis) 
        ?(mapCastId tg x y is1 &&& mergeNewIndices tg x y)
   ==. SM i (makeIndices i tg 0 hi1 `append` makeIndices i tg (hi1+1) hi) 
-      ? shiftIndicesRight 0 hi2 x y tg 
+      ?shiftIndicesRight 0 hi2 x y tg 
   ==. SM i is
-      ? mergeIndices i tg 0 hi1 hi
+      ?mergeIndices i tg 0 hi1 hi
   ==. toSM (x <+> y)
   *** QED 
   where
@@ -118,14 +153,14 @@ mergeNewIndices tg x1 x2
   ==. makeIndices x1 tg 0 hi     `append` N
   ==. makeIndices x1 tg 0 hi 
       ? appendNil (makeIndices x1 tg 0 hi)
-  ==. makeIndices x  tg 0 hi
-      ? concatmakeNewIndices 0 hi tg x1 x2
+  ==. makeIndices x tg 0 hi
+      ? concatMakeIndices 0 hi tg x1 x2
   *** QED 
   | stringLen x1  < stringLen tg
   =   makeSMIndices x1 tg        `append` makeNewIndices x1 x2 tg
   ==. makeIndices x1 tg 0 hi     `append` makeNewIndices x1 x2 tg
   ==. N                          `append` makeIndices x tg 0  hi
-      ? makeNewIndicesNullSmallInput x1 tg 0 hi
+      ? makeIndicesNull x1 tg 0 hi
   ==. makeIndices x  tg 0 hi
   *** QED 
   | otherwise {- stringLen tg <= stringLen x1 -}

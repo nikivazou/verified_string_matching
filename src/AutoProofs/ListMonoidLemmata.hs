@@ -59,10 +59,23 @@ listAssoc (C _ x) y z = listAssoc x y z
 
 {-@ automatic-instances listTakeDrop   @-}
 
-{-@ listTakeDrop :: i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} / [llen xs] @-}
+{-@ listTakeDrop :: i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} @-}
 listTakeDrop :: Int -> List a -> Proof 
-listTakeDrop i xs | i == 0 = listLeftId xs 
-listTakeDrop i (C _ xs)    = listTakeDrop (i-1) xs 
+listTakeDrop i N           
+  = append (take i N) (drop i N) ==. append N N ==. N *** QED  
+listTakeDrop i (C x xs) 
+  | i == 0 
+  = append (take i (C x xs)) (drop i (C x xs))
+  ==. append N (C x xs)
+  ==. C x xs
+  *** QED 
+listTakeDrop i (C x xs) 
+  =   append (take i (C x xs))     (drop i (C x xs))
+  ==. append (C x (take (i-1) xs)) (drop (i-1) xs)
+  ==. C x (append (take (i-1) xs)  (drop (i-1) xs))
+      ? listTakeDrop (i-1) xs    
+  ==. C x xs 
+  *** QED 
 
 -------------------------------------------------------------------------------
 --------------  Compatibility with the old names  -----------------------------
