@@ -13,7 +13,7 @@ packages:
 
 - location:
     git: https://github.com/ucsd-progsys/liquidhaskell.git
-    commit: 5af067910d06ddb63d42df66cf13b1cf6cdb5485
+    commit: 9bf9ab4654f618634aeb932b98396da048935a06
 
 extra-deps:
 - dotgen-0.4.2
