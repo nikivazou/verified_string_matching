@@ -142,7 +142,7 @@ runLiquidProof :: String -> ExitCode -> IO ExitCode
 
 runLiquidProof fm i 
   = do pf <- runCommand ("stack exec -- liquid src/Proofs"     ++ fm) >>= waitForProcess
-       ap <- runCommand ("stack exec -- liquid src/AutoProofs" ++ fm) >>= waitForProcess
+       ap <- runCommand ("stack exec -- liquid src/AutoProofs --debug" ++ fm) >>= waitForProcess
        return $ mconcat [i, pf, ap] 
 
 runLiquid :: ()   -> IO ExitCode
