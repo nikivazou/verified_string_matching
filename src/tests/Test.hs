@@ -11,8 +11,8 @@ import Data.Foldable (foldlM)
 
 main :: IO ()
 main = do 
-  putStrLn "\nTest Runtime..."
-  testRunTime ()
+  -- putStrLn "\nTest Runtime..."
+  -- testRunTime ()
   putStrLn "\nRun Liquid... "
   cd <- runLiquid ()
   putStrLn "\nDone Testing"
@@ -142,22 +142,28 @@ liquidFiles
 runLiquidProof :: ExitCode -> String -> IO ExitCode
 
 runLiquidProof i fm
-  = runCommand ("stack exec -- liquid AutoProofs/" ++ fm) >>= waitForProcess
+  = do pf <- runCommand' ("cd src; stack exec -- liquid AutoProofs/" ++ fm ++ "> log 2>&1 ; cd ..")
+       return $ mconcat [i, pf]
 {-   
   = do pf <- runCommand ("stack exec -- liquid Proofs/"     ++ fm) >>= waitForProcess
        ap <- runCommand ("stack exec -- liquid AutoProofs/" ++ fm) >>= waitForProcess
        return $ mconcat [i, pf, ap] 
 -}
 
+runCommand' :: String -> IO ExitCode
+runCommand' str = 
+  do ps <- runCommand (str ++ "> log 2>&1")
+     ec <- waitForProcess ps 
+     putStrLn ("\nCommand `" ++ str ++ "` exited with " ++ show ec)
+     return ec
+
 runLiquid :: ()   -> IO ExitCode
 runLiquid _ = do 
-  e0 <- runCommand "stack install liquidhaskell" >>= waitForProcess
-  _ <- runCommand "cd src/" >>= waitForProcess
-  e1 <- foldlM runLiquidProof e0 liquidFiles
-  _ <- runCommand "cd .." >>= waitForProcess
-  e2 <- runCommand "stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
-  e3 <- return mempty --  runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess -- THIS TAKES FOREVER
-  return $ mconcat [e1, e2, e3]
+  e1 <- runCommand' "stack install liquidhaskell" 
+  e2 <- foldlM runLiquidProof e1 liquidFiles
+  e3 <- runCommand' "stack exec -- liquid src/StringMatching.hs "  
+  e4 <- return mempty --  runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess -- THIS TAKES FOREVER
+  return $ mconcat [e1, e2, e3, e4]
 
 
 instance Monoid ExitCode where
