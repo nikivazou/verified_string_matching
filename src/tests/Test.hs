@@ -142,14 +142,16 @@ liquidFiles
 runLiquidProof :: ExitCode -> String -> IO ExitCode
 
 runLiquidProof i fm
-  = do pf <- runCommand ("stack exec -- liquid src/Proofs/"     ++ fm) >>= waitForProcess
-       ap <- runCommand ("stack exec -- liquid src/AutoProofs/" ++ fm) >>= waitForProcess
+  = do pf <- runCommand ("stack exec -- liquid Proofs/"     ++ fm) >>= waitForProcess
+       ap <- runCommand ("stack exec -- liquid AutoProofs/" ++ fm) >>= waitForProcess
        return $ mconcat [i, pf, ap] 
 
 runLiquid :: ()   -> IO ExitCode
 runLiquid _ = do 
   e0 <- runCommand "stack install liquidhaskell" >>= waitForProcess
+  _ <- runCommand "cd src/" >>= waitForProcess
   e1 <- foldlM runLiquidProof e0 liquidFiles
+  _ <- runCommand "cd .." >>= waitForProcess
   e2 <- runCommand "travis_wait stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
   e3 <- runCommand "travis_wait stack exec -- liquid src/AutoStringMatching.hs --debug" >>= waitForProcess 
   return $ mconcat [e1, e2, e3]
