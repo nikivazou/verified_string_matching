@@ -16,6 +16,7 @@
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--no-measure-fields"   @-}
 {-@ LIQUID "--trust-internals"     @-}
+{-@ LIQUID "--automatic-instances=liquidinstanceslocal" @-}
 
 {-@ infix <+> @-}
 {-@ infix <>  @-}
@@ -52,34 +53,17 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #define IncludedMonoidEmptyLeft
 
 #ifdef CheckMonoidEmptyLeft
+
+{-@ automatic-instances smLeftId @-}
+
 smLeftId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
 {-@ smLeftId :: xs:SM target -> {xs <> mempty == xs } @-}
 smLeftId (SM i is) 
   = let tg = fromString (symbolVal (Proxy :: Proxy target)) in 
-      (SM i is) <> (mempty :: SM target)
-  ==. (SM i is) <> (SM stringEmp N) 
-  ==. SM (i <+> stringEmp)
-         ((map (castGoodIndexRight tg i stringEmp) is
-            `append`
-           makeNewIndices i stringEmp tg 
-         ) `append`
-         (map (shiftStringRight tg i stringEmp) N))
-      ? stringLeftId i 
-  ==. SM i
-         ((map (castGoodIndexRight tg i stringEmp) is
-            `append`
-           makeNewIndices i stringEmp tg
-         ) `append`
-         (map (shiftStringRight tg i stringEmp) N))
-      ? mapCastId tg i stringEmp is
-  ==. SM i ((is `append` N) `append` (map (shiftStringRight tg i stringEmp) N))
-      ? makeNewIndicesNullLeft i tg 
-  ==. SM i (is `append` map (shiftStringRight tg i stringEmp) N)
-      ? listLeftId is  
-  ==. SM i (is `append` N)
-      ? listLeftId is  
-  ==. SM i is 
-  *** QED 
+      stringLeftId i 
+  &&& mapCastId tg i stringEmp is
+  &&& makeNewIndicesNullLeft i tg 
+  &&& listLeftId is  
 
 
 mempty_left :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof

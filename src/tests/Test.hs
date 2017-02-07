@@ -152,8 +152,8 @@ runLiquid _ = do
   _ <- runCommand "cd src/" >>= waitForProcess
   e1 <- foldlM runLiquidProof e0 liquidFiles
   _ <- runCommand "cd .." >>= waitForProcess
-  e2 <- runCommand "travis_wait stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
-  e3 <- runCommand "travis_wait stack exec -- liquid src/AutoStringMatching.hs --debug" >>= waitForProcess 
+  e2 <- runCommand "stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
+  e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs --debug" >>= waitForProcess 
   return $ mconcat [e1, e2, e3]
 
 

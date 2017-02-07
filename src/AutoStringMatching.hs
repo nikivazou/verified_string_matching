@@ -162,16 +162,12 @@ toSMPar parfactor chunksize input
 
 #ifdef IncludedMonoidEmptyRight
 #else  
-#include "../Proofs/MonoidEmptyRight.hs"   
+#include "../AutoProofs/MonoidEmptyRight.hs"   
 #endif
 
 #ifdef IncludedMonoidEmptyLeft
 #else  
-#include "../Proofs/MonoidEmptyLeft.hs"   
-#endif
-#ifdef IncludedMonoidEmptyRight
-#else  
-#include "../Proofs/MonoidEmptyRight.hs"   
+#include "../AutoProofs/MonoidEmptyLeft.hs"   
 #endif
 
 #ifdef IncludedMonoidAssoc
