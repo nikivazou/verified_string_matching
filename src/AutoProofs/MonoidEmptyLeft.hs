@@ -42,12 +42,12 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #ifdef IncludedmakeNewIndicesNullLeft
 #else  
-#include "../Proofs/makeNewIndicesNullLeft.hs"   
+#include "../AutoProofs/makeNewIndicesNullLeft.hs"   
 #endif
 
 #ifdef IncludedmapCastId
 #else  
-#include "../Proofs/mapCastId.hs"   
+#include "../AutoProofs/mapCastId.hs"   
 #endif
 
 #define IncludedMonoidEmptyLeft

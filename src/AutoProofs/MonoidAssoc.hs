@@ -160,6 +160,9 @@ makeIs3right tg xi yi zi yis
 makeIs4right tg xi yi zi     
   = makeNewIndices (xi <+> yi) zi tg
 
+
+{-@ automatic-instances assocNewIndices @-}
+
 assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) => 
   SM target -> RString -> RString -> RString -> RString -> List Int -> Proof
 {-@ assocNewIndices :: y:SM target -> tg:{RString | tg == target} -> xi:RString 

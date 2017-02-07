@@ -172,5 +172,5 @@ toSMPar parfactor chunksize input
 
 #ifdef IncludedMonoidAssoc
 #else  
-#include "Proofs/MonoidAssoc.hs"
+#include "AutoProofs/MonoidAssoc.hs"
 #endif
