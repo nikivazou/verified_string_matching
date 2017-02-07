@@ -7,6 +7,7 @@ import Text.Printf
 import Data.List (sort)
 
 import StringMatching (timeParStringMatching, timeSeqStringMatching)
+import Data.Foldable (foldlM)
 
 main :: IO ()
 main = do 
@@ -131,25 +132,26 @@ liquidFiles :: [String]
 liquidFiles 
   = [ "ListMonoidLemmata.hs"
     , "PmconcatEquivalence.hs"
-    , "MonoidEmptyLeft.hs"       -- make Auto
-    , "MonoidEmptyRight.hs"      -- make Auto
-    , "MonoidEmptyAssoc.hs"      -- make Auto
-    , "DistributeToSM.hs"        -- make Auto
+    , "MonoidEmptyLeft.hs"       
+    , "MonoidEmptyRight.hs"      
+    , "MonoidEmptyAssoc.hs"      
+    , "DistributeToSM.hs"       
     ]
 
 
-runLiquidProof :: String -> ExitCode -> IO ExitCode
+runLiquidProof :: ExitCode -> String -> IO ExitCode
 
-runLiquidProof fm i 
+runLiquidProof i fm
   = do pf <- runCommand ("stack exec -- liquid src/Proofs"     ++ fm) >>= waitForProcess
        ap <- runCommand ("stack exec -- liquid src/AutoProofs --debug" ++ fm) >>= waitForProcess
        return $ mconcat [i, pf, ap] 
 
 runLiquid :: ()   -> IO ExitCode
 runLiquid _ = do 
-  e1 <- runCommand "stack install liquidhaskell" >>= waitForProcess
-  e2 <- runCommand "stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
-  e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess 
+  e0 <- runCommand "stack install liquidhaskell" >>= waitForProcess
+  e1 <- foldlM runLiquidProof e0 liquidFiles
+  e2 <- runCommand "travis_wait stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
+  e3 <- runCommand "travis_wait stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess 
   return $ mconcat [e1, e2, e3]
 
 
