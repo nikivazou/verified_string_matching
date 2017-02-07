@@ -135,7 +135,7 @@ liquidFiles
     , "MonoidEmptyLeft.hs"       
     , "MonoidEmptyRight.hs"      
     , "MonoidEmptyAssoc.hs"      
-    , "DistributeToSM.hs"       
+   --  , "DistributeToSM.hs"       
     ]
 
 
@@ -153,7 +153,7 @@ runLiquid _ = do
   e1 <- foldlM runLiquidProof e0 liquidFiles
   _ <- runCommand "cd .." >>= waitForProcess
   e2 <- runCommand "stack exec -- liquid src/StringMatching.hs"     >>= waitForProcess 
-  e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs --debug" >>= waitForProcess 
+  e3 <- runCommand "stack exec -- liquid src/AutoStringMatching.hs" >>= waitForProcess 
   return $ mconcat [e1, e2, e3]
 
 

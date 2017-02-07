@@ -1,0 +1,12 @@
+#define IncludedcastConcat
+
+{-@ automatic-instances castConcat @-}
+
+castConcat :: RString -> RString -> RString -> RString -> List Int -> Proof
+{-@ castConcat :: tg:RString -> xi:RString -> yi:RString -> zi:RString 
+             ->  xis:List (GoodIndex xi tg) 
+        -> { map (castGoodIndexRight tg xi (yi <+> zi)) xis == map (castGoodIndexRight tg (xi <+> yi) zi) (map (castGoodIndexRight tg xi yi) xis)} @-}
+castConcat tg xi yi zi xis
+  =    mapCastId tg xi (yi <+> zi) xis 
+  &&&  mapCastId tg xi yi xis  
+  &&& mapCastId tg (xi <+> yi) zi (map (castGoodIndexRight tg xi yi) xis) 

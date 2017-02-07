@@ -35,53 +35,51 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs"  
 #include "../Data/StringMatching/StringMatching.hs"
-#include "../Proofs/ListMonoidLemmata.hs"
+#include "../AutoProofs/ListMonoidLemmata.hs"
 
 
 
 #define CheckMonoidAssoc
 #endif
 
-#ifdef IncludedListLemmata
-#else  
-#include "../Proofs/ListLemmata.hs"   
-#endif
-
 #ifdef IncludedshiftNewIndices
 #else  
-#include "../Proofs/shiftNewIndices.hs"   
+#include "../AutoProofs/shiftNewIndices.hs"   
+#endif
+
+#ifdef IncludedshiftNewIndicesLeft
+#else  
+#include "../AutoProofs/shiftNewIndicesLeft.hs"   
+#endif
+
+#ifdef IncludedListLemmata
+#else  
+#include "../AutoProofs/ListLemmata.hs"   
 #endif
 
 #ifdef IncludedemptyIndices
 #else  
-#include "../Proofs/emptyIndices.hs"   
+#include "../AutoProofs/emptyIndices.hs"   
 #endif
 
 #ifdef IncludedcastShift
 #else  
-#include "../Proofs/castShift.hs"   
+#include "../AutoProofs/castShift.hs"   
 #endif
 
 #ifdef IncludedshiftNewIndicesRight
 #else  
-#include "../Proofs/shiftNewIndicesRight.hs"   
+#include "../AutoProofs/shiftNewIndicesRight.hs"   
 #endif
-
-
-#ifdef IncludedshiftNewIndicesLeft
-#else  
-#include "../Proofs/shiftNewIndicesLeft.hs"   
-#endif
-
 
 #ifdef IncludedmapLenFusion
 #else  
-#include "../Proofs/mapLenFusion.hs"   
+#include "../AutoProofs/mapLenFusion.hs"   
 #endif
 
 #ifdef IncludedcastConcat
 #else  
-#include "../Proofs/castConcat.hs"   
+#include "../AutoProofs/castConcat.hs"   
 #endif
 
 #define IncludedMonoidAssoc
