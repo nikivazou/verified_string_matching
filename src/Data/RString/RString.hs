@@ -117,7 +117,7 @@ concatEmpLeft :: RString -> RString -> Proof
 concatEmpLeft xi yi 
   =   (xi <+> yi) 
   ==. (stringEmp <+> yi) ? stringEmpProp xi 
-  ==. yi                        ? concatStringNeutralRight yi
+  ==. yi                 ? concatStringNeutralRight yi
   *** QED 
 
 
