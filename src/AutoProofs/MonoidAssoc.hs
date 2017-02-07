@@ -88,24 +88,36 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #ifdef CheckMonoidAssoc 
 
-{-@ automatic-instances mappend_assoc @-}
-
 {-@ mappend_assoc :: x:SM target -> y:SM target -> z:SM target -> { x <> (y <> z) = (x <> y) <> z} @-}
 mappend_assoc
      :: forall (target :: Symbol). (KnownSymbol target) 
      => SM target ->  SM target ->  SM target -> Proof
 
 mappend_assoc x@(SM xi xis) y@(SM yi yis) z@(SM zi zis)
-  =   stringAssoc xi yi zi 
-  &&& mapAppend (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) yziright 
-  &&& mapAppend (shiftStringRight tg xi (yi <+> zi)) yzileft yzinew 
-  &&& appendGroup is1left is2left is3left is4left is5left
-  &&& assocNewIndices y tg xi yi zi yis
-  &&& castConcat tg xi yi zi xis 
-  &&& mapLenFusion tg xi yi zi zis
-  &&& appendUnGroup is1right is2right is3right is4right is5right
-  &&& mapAppend (castGoodIndexRight tg (xi <+> yi) zi) xyileft xyinew
-  &&& mapAppend (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew) xyiright
+  =   x <> (y <> z)
+  ==. (SM xi xis) <> ((SM yi yis) <> (SM zi zis))
+  ==. (SM xi xis) <> (SM (yi <+> zi) (yzileft `append` yzinew `append` yziright)) 
+  ==. SM input (is1left `append` is2left `append` (map (shiftStringRight tg xi (yi <+> zi)) yzi))
+      ? stringAssoc xi yi zi 
+  ==. SM input (is1left `append` is2left `append` (map (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) `append` is5left))
+      ? mapAppend (shiftStringRight tg xi (yi <+> zi)) (yzileft `append` yzinew) yziright 
+  ==. SM input (is1left `append` is2left `append` (is3left `append` is4left `append` is5left))
+      ? mapAppend (shiftStringRight tg xi (yi <+> zi)) yzileft yzinew 
+  ==. SM input (is1left `append` ((is2left `append` is3left `append` is4left) `append` is5left))
+      ? appendGroup is1left is2left is3left is4left is5left
+  ==. SM input (is1left `append` ((is2right `append` is3right `append` is4right) `append` is5left))
+      ? assocNewIndices y tg xi yi zi yis
+  ==. SM input (is1right `append` ((is2right `append` is3right `append` is4right) `append` is5right))
+      ? (castConcat tg xi yi zi xis &&& mapLenFusion tg xi yi zi zis)
+  ==. SM input ((is1right `append` is2right) `append` is3right `append` is4right `append` is5right)
+      ? appendUnGroup is1right is2right is3right is4right is5right
+  ==. SM input ((map (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew)) `append` is3right `append` is4right `append` is5right)
+      ? mapAppend (castGoodIndexRight tg (xi <+> yi) zi) xyileft xyinew
+  ==. SM input ((map (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew `append` xyiright)) `append` is4right `append` is5right)
+      ? mapAppend (castGoodIndexRight tg (xi <+> yi) zi) (xyileft `append` xyinew) xyiright
+  ==. (SM (xi <+> yi) (xyileft `append` xyinew `append` xyiright)) <> (SM zi zis)
+  ==. ((SM xi xis) <> (SM yi yis)) <> (SM zi zis)
+  *** QED 
   where
         tg         = fromString (symbolVal (Proxy :: Proxy target))
         yzileft    = map (castGoodIndexRight tg yi zi) yis
@@ -135,9 +147,6 @@ mappend_assoc x@(SM xi xis) y@(SM yi yis) z@(SM zi zis)
         input      = xi <+> (yi <+> zi)
 
 
-
-
-
 {-@ inline makeIs2left @-}
 {-@ inline makeIs3left @-}
 {-@ inline makeIs4left @-}
@@ -160,8 +169,6 @@ makeIs3right tg xi yi zi yis
 makeIs4right tg xi yi zi     
   = makeNewIndices (xi <+> yi) zi tg
 
-
-{-@ automatic-instances assocNewIndices @-}
 
 assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) => 
   SM target -> RString -> RString -> RString -> RString -> List Int -> Proof
