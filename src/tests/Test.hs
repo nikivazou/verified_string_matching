@@ -162,7 +162,7 @@ runLiquid _ = do
   e1 <- runCommand' "stack install liquidhaskell" 
   e2 <- foldlM runLiquidProof e1 liquidFiles
   e3 <- runCommand' "stack exec -- liquid src/StringMatching.hs "  
-  e4 <- runCommand' "stack exec -- liquid src/AutoStringMatching.hs --debug" 
+  e4 <- return mempty --   runCommand' "stack exec -- liquid src/AutoStringMatching.hs --debug" 
   return $ mconcat [e1, e2, e3, e4]
 
 

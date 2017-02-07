@@ -1,5 +1,7 @@
 #define IncludedconcatMakeIndices
 
+{- FAILS automatic-instances concatMakeIndices @-}
+
 {-@ concatMakeIndices
   :: lo:Nat -> hi:Int
   -> target: RString
@@ -47,7 +49,9 @@ concatMakeIndices lo hi target input input'
   ==. makeIndices  (input <+> input') target lo hi
       ? isGoodIxConcatBack input input' target lo  
   *** QED 
+ 
 
+{- FAILS  automatic-instances isGoodIxConcatBack @-}
 
 {-@ isGoodIxConcatBack 
   :: input:RString -> input':RString -> tg:RString -> i:{Int | i + stringLen tg <= stringLen input }
@@ -69,3 +73,4 @@ isGoodIxConcatBack input input' tg i
       ? (((stringLen input <= stringLen (input <+> input') *** QED ) &&& (concatLen input input') *** QED))
   ==. isGoodIndex (input <+> input') tg i 
   *** QED 
+

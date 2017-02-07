@@ -35,7 +35,7 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs" 
 #include "../Data/StringMatching/StringMatching.hs"
-#include "../Proofs/ListMonoidLemmata.hs" 
+#include "../AutoProofs/ListMonoidLemmata.hs" 
 
 #define CheckMonoidEmptyLeft
 #endif

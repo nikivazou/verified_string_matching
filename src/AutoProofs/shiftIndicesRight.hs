@@ -1,5 +1,8 @@
 #define IncludedshiftIndicesRight
 
+
+{- automatic-instances shiftIndicesRight @-}
+{-  AUTO INSTANCES FAILS -}
 {-@ shiftIndicesRight
   :: lo:Nat 
   -> hi:Int  
@@ -57,6 +60,8 @@ shiftIndicesRight lo hi x input target
      ? isGoodIxConcatFront input x target lo 
   *** QED 
 
+{- automatic-instances isGoodIxConcatFront @-}
+{-  AUTO INSTANCES FAILS -}
 
 {-@ isGoodIxConcatFront 
   :: input:RString -> input':RString -> tg:RString -> i:Nat

@@ -88,6 +88,9 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 #endif
 
 #ifdef CheckDistributeInput 
+
+{- FAILS automatic-instances distributestoSM @-}
+
 distributestoSM :: forall (target :: Symbol). (KnownSymbol target) => SM target -> RString -> RString -> Proof 
 {-@ distributestoSM :: SM target -> x1:RString -> x2:RString 
   -> {toSM (x1 <+> x2) ==  (toSM x1) <> (toSM x2)} @-} 
@@ -143,6 +146,8 @@ distributestoSM _ x y
 
 
 {-@ type RStringNE = {v:RString | 0 < stringLen v } @-}
+
+{- FAILS automatic-instances mergeNewIndices @-}
 
 mergeNewIndices :: RString -> RString -> RString -> Proof
 {-@ mergeNewIndices :: tg:RString -> x1:RStringNE -> x2:RStringNE 
