@@ -27,4 +27,4 @@ addons:
 
 script:
   - stack build 
-  - travis_wait 60 stack --skip-ghc-check test verified-string-matching
+  - stack --skip-ghc-check test verified-string-matching

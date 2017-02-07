@@ -16,6 +16,7 @@
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--no-measure-fields"   @-}
 {-@ LIQUID "--trust-internals"     @-}
+{-@ LIQUID "--automatic-instances=liquidinstanceslocal" @-}
 
 {-@ infix <+> @-}
 {-@ infix <>  @-}
@@ -37,53 +38,53 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs"  
 #include "../Data/StringMatching/StringMatching.hs"
-#include "../Proofs/ListMonoidLemmata.hs"
+#include "../AutoProofs/ListMonoidLemmata.hs"
 
 #ifdef IncludedListLemmata
 #else  
-#include "../Proofs/ListLemmata.hs"   
+#include "../AutoProofs/ListLemmata.hs"   
 #endif
 
 #endif
 
 #ifdef IncludedtoSMEmpty
 #else  
-#include "../Proofs/toSMEmpty.hs"   
+#include "../AutoProofs/toSMEmpty.hs"   
 #endif
 
 #ifdef IncludedMonoidEmptyRight
 #else  
-#include "../Proofs/MonoidEmptyRight.hs"   
+#include "../AutoProofs/MonoidEmptyRight.hs"   
 #endif
 
 #ifdef IncludedMonoidEmptyLeft
 #else  
-#include "../Proofs/MonoidEmptyLeft.hs"   
+#include "../AutoProofs/MonoidEmptyLeft.hs"   
 #endif
 
 #ifdef IncludedmapCastId
 #else  
-#include "../Proofs/mapCastId.hs"   
+#include "../AutoProofs/mapCastId.hs"   
 #endif
 
 #ifdef IncludedshiftIndicesRight
 #else  
-#include "../Proofs/shiftIndicesRight.hs"   
+#include "../AutoProofs/shiftIndicesRight.hs"   
 #endif
 
 #ifdef IncludedmergeIndices
 #else  
-#include "../Proofs/mergeIndices.hs"   
+#include "../AutoProofs/mergeIndices.hs"   
 #endif
 
 #ifdef IncludedcatIndices
 #else  
-#include "../Proofs/catIndices.hs"   
+#include "../AutoProofs/catIndices.hs"   
 #endif
 
 #ifdef IncludedconcatMakeIndices
 #else  
-#include "../Proofs/concatMakeIndices.hs"   
+#include "../AutoProofs/concatMakeIndices.hs"   
 #endif
 
 #ifdef CheckDistributeInput 
