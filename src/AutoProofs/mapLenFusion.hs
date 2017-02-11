@@ -10,11 +10,9 @@ mapLenFusion :: RString -> RString -> RString -> RString -> List Int -> Proof
 mapLenFusion tg xi yi zi N  
   = trivial 
 mapLenFusion tg xi yi zi (C i is)  
-  =   map (shiftStringRight tg xi ((<+>) yi zi)) (map (shiftStringRight tg yi zi) (C i is))
-  ==. map (shiftStringRight tg xi ((<+>) yi zi)) (shiftStringRight tg yi zi i `C` map (shiftStringRight tg yi zi) is)
-  ==. shiftStringRight tg xi ((<+>) yi zi) (shiftStringRight tg yi zi i) `C` (map (shiftStringRight tg xi ((<+>) yi zi)) (map (shiftStringRight tg yi zi) is))
-  ==. shiftStringRight tg ((<+>) xi yi) zi i `C` (map (shiftStringRight tg xi ((<+>) yi zi)) (map (shiftStringRight tg yi zi) is))
-  ==. shiftStringRight tg ((<+>) xi yi) zi i `C` (map (shiftStringRight tg ((<+>) xi yi) zi) is)
-       ? mapLenFusion tg xi yi zi is 
-  ==. map (shiftStringRight tg ((<+>) xi yi) zi) (C i is)
-  *** QED  
+  =  mapLenFusion tg xi yi zi is
+  &&& ( shiftStringRight tg xi (yi <+> zi) (shiftStringRight tg yi zi i)
+    ==. shiftStringRight tg (xi <+> yi) zi i
+    *** QED)
+
+
