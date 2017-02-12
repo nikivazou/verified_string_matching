@@ -1,8 +1,7 @@
 #define IncludedshiftIndicesRight
 
 
-{- automatic-instances shiftIndicesRight @-}
-{-  AUTO INSTANCES FAILS -}
+{-@ automatic-instances shiftIndicesRight @-}
 {-@ shiftIndicesRight
   :: lo:Nat 
   -> hi:Int  
@@ -15,11 +14,8 @@
 shiftIndicesRight :: Int -> Int -> RString -> RString -> RString -> Proof
 shiftIndicesRight lo hi x input target
   | hi < lo 
-  =   map (shiftStringRight target x input) (makeIndices input target lo hi)
-  ==. map (shiftStringRight target x input) N
-  ==. N
-  ==. makeIndices (x <+> input) target (stringLen x + lo) (stringLen x + hi)
-  *** QED 
+  = trivial
+shiftIndicesRight lo hi x input target
   | lo == hi, isGoodIndex input target lo 
   =   map (shiftStringRight target x input) (makeIndices input target lo hi)
   ==. map (shiftStringRight target x input) (lo `C` makeIndices input target (lo+1) hi)
@@ -30,11 +26,11 @@ shiftIndicesRight lo hi x input target
   ==. makeIndices (x <+> input) target (stringLen x + lo) (stringLen x + hi)
      ? isGoodIxConcatFront input x target lo  
   *** QED 
+shiftIndicesRight lo hi x input target
   | lo == hi
   =   map (shiftStringRight target x input) (makeIndices input target lo hi)
   ==. map (shiftStringRight target x input) (makeIndices input target (lo+1) hi)
   ==. map (shiftStringRight target x input) N
-  ==. N
   ==. makeIndices (x <+> input) target (stringLen x + lo + 1) (stringLen x + hi)
   ==. makeIndices (x <+> input) target (stringLen x + lo) (stringLen x + hi)
      ? isGoodIxConcatFront input x target lo 
@@ -51,14 +47,9 @@ shiftIndicesRight lo hi x input target
   ==. makeIndices ((<+>) x input) target (stringLen x + lo) (stringLen x + hi)
       ? isGoodIxConcatFront input x target lo 
   *** QED 
-  | otherwise
-  =   map (shiftStringRight target x input) (makeIndices input target lo hi)
-  ==. map (shiftStringRight target x input) (makeIndices input target (lo + 1) hi)
-  ==. makeIndices ((<+>) x input) target (stringLen x + (lo+1)) (stringLen x + hi)
-      ? shiftIndicesRight (lo+1) hi x input target
-  ==. makeIndices ((<+>) x input) target (stringLen x + lo) (stringLen x + hi)
-     ? isGoodIxConcatFront input x target lo 
-  *** QED 
+shiftIndicesRight lo hi x input target
+  =   shiftIndicesRight (lo+1) hi x input target
+  &&& isGoodIxConcatFront input x target lo 
 
 {- automatic-instances isGoodIxConcatFront @-}
 {-  AUTO INSTANCES FAILS -}

@@ -1,6 +1,6 @@
 #define IncludedconcatMakeIndices
 
-{- FAILS automatic-instances concatMakeIndices @-}
+{-@ automatic-instances concatMakeIndices @-}
 
 {-@ concatMakeIndices
   :: lo:Nat -> hi:Int
@@ -12,43 +12,23 @@
 concatMakeIndices :: Int -> Int -> RString -> RString -> RString  -> Proof
 concatMakeIndices lo hi target input input'
   | hi < lo 
-  =   makeIndices input target lo hi
-  ==. N
-  ==. makeIndices (input <+> input') target lo hi 
-  *** QED 
-  | lo == hi, isGoodIndex input target lo
-  =   makeIndices input target lo hi
-  ==. lo `C` makeIndices input target (lo+1) hi
-  ==. lo `C` N
-  ==. lo `C` makeIndices (input <+> input') target (lo+1) hi
-  ==. makeIndices (input <+> input') target lo hi 
-      ?isGoodIxConcatBack input input' target lo  
-  *** QED 
+  =  trivial 
+
+concatMakeIndices lo hi target input input'
   | lo == hi
   =  makeIndices input target lo hi 
   ==. makeIndices input target (lo+1) hi
-  ==. N
   ==. makeIndices (input <+> input') target (lo+1) hi
   ==. makeIndices (input <+> input') target lo hi
       ?isGoodIxConcatBack input input' target lo  
   *** QED 
 concatMakeIndices lo hi target input input' 
-  | isGoodIndex input target lo
-  =   makeIndices input target lo hi
-  ==. lo `C` (makeIndices input target (lo + 1) hi)
-  ==. lo `C` (makeIndices (input <+> input') target (lo + 1) hi)
-      ? concatMakeIndices (lo+1) hi target input input'
-  ==. makeIndices  (input <+> input') target lo hi
-      ?isGoodIxConcatBack input input' target lo  
-  *** QED 
-  | otherwise 
-  =   makeIndices input target lo hi
-  ==. makeIndices input target (lo + 1) hi
-  ==. makeIndices (input <+> input') target (lo + 1) hi
-      ?concatMakeIndices (lo+1) hi target input input'
-  ==. makeIndices  (input <+> input') target lo hi
-      ? isGoodIxConcatBack input input' target lo  
-  *** QED 
+  |   isGoodIndex input target lo
+  =   concatMakeIndices (lo+1) hi target input input'
+  &&& isGoodIxConcatBack input input' target lo  
+concatMakeIndices lo hi target input input'
+  =   concatMakeIndices (lo+1) hi target input input'
+  &&& isGoodIxConcatBack input input' target lo  
  
 
 {- FAILS  automatic-instances isGoodIxConcatBack @-}
