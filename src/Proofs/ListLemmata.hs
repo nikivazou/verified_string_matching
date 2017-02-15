@@ -1,3 +1,5 @@
+#define IncludedListLemmata
+
 appendGroup :: List a -> List a -> List a -> List a -> List a -> Proof
 {-@ appendGroup 
   :: x1:List a 
@@ -11,11 +13,11 @@ appendGroup :: List a -> List a -> List a -> List a -> List a -> Proof
 appendGroup x1 x2 x3 x4 x5 
   =   append (append x1 x2) (append (append x3 x4) x5)
   ==. append x1 (append x2 (append (append x3 x4) x5))
-      ? appendAssoc x1 x2 (append (append x3 x4) x5)
+      ? listAssoc x1 x2 (append (append x3 x4) x5)
   ==. append x1 (append (append x2 (append x3 x4)) x5)
-      ? appendAssoc x2 (append x3 x4) x5 
+      ? listAssoc x2 (append x3 x4) x5 
   ==. append x1 (append (append (append x2 x3) x4) x5)
-      ? appendAssoc x2 x3 x4 
+      ? listAssoc x2 x3 x4 
   *** QED 
 
 appendUnGroup :: List a -> List a -> List a -> List a -> List a -> Proof
@@ -31,13 +33,13 @@ appendUnGroup :: List a -> List a -> List a -> List a -> List a -> Proof
 appendUnGroup x1 x2 x3 x4 x5 
   =   append x1 (append (append (append x2 x3) x4) x5)
   ==. append x1 (append (append x2 (append x3 x4)) x5)
-      ? appendAssoc x2 x3 x4 
+      ? listAssoc x2 x3 x4 
   ==. append (append x1 (append x2 (append x3 x4))) x5
-      ? appendAssoc x1 (append x2 (append x3 x4)) x5 
+      ? listAssoc x1 (append x2 (append x3 x4)) x5 
   ==. append (append (append x1 x2) (append x3 x4)) x5
-      ? appendAssoc x1 x2 (append x3 x4) 
+      ? listAssoc x1 x2 (append x3 x4) 
   ==. append (append (append (append x1 x2) x3) x4) x5
-      ? appendAssoc (append x1 x2) x3 x4
+      ? listAssoc (append x1 x2) x3 x4
   *** QED
 
 
@@ -61,5 +63,3 @@ mapAppend f (C x xs) ys
   ==. append (f x `C` map f xs) (map f ys)
   ==. append (map f (x `C` xs)) (map f ys)
   *** QED 
-
-

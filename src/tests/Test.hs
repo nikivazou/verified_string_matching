@@ -7,11 +7,12 @@ import Text.Printf
 import Data.List (sort)
 
 import StringMatching (timeParStringMatching, timeSeqStringMatching)
+import Data.Foldable (foldlM)
 
 main :: IO ()
 main = do 
-  putStrLn "\nTest Runtime..."
-  testRunTime ()
+  -- putStrLn "\nTest Runtime..."
+  -- testRunTime ()
   putStrLn "\nRun Liquid... "
   cd <- runLiquid ()
   putStrLn "\nDone Testing"
@@ -126,9 +127,48 @@ sep _ [] = []
 sep _ [x] = x 
 sep s (x:xs) = x ++ s ++ sep s xs 
 
+
+liquidFiles :: [String]
+liquidFiles 
+  = [ "ListMonoidLemmata.hs"
+    , "PmconcatEquivalence.hs"
+    , "MonoidEmptyLeft.hs"       
+    , "MonoidEmptyRight.hs"      
+    , "MonoidEmptyAssoc.hs"      
+    , "DistributeToSM.hs"       
+    ]
+
+
+runLiquidProof :: ExitCode -> String -> IO ExitCode
+
+runLiquidProof i fm
+  = do pf <- runCommand' ("cd src; stack exec -- liquid AutoProofs/" ++ fm ++ "> log 2>&1 ; cd ..")
+       return $ mconcat [i, pf]
+{-   
+  = do pf <- runCommand ("stack exec -- liquid Proofs/"     ++ fm) >>= waitForProcess
+       ap <- runCommand ("stack exec -- liquid AutoProofs/" ++ fm) >>= waitForProcess
+       return $ mconcat [i, pf, ap] 
+-}
+
+runCommand' :: String -> IO ExitCode
+runCommand' str = 
+  do ps <- runCommand (str ++ "> log 2>&1")
+     ec <- waitForProcess ps 
+     putStrLn ("\nCommand `" ++ str ++ "` exited with " ++ show ec)
+     return ec
+
 runLiquid :: ()   -> IO ExitCode
-runLiquid _ = 
-      runCommand "stack install liquidhaskell"
-  >>= waitForProcess
-  >>  runCommand "stack exec -- liquid src/StringMatching.hs"
-  >>= waitForProcess 
+runLiquid _ = do 
+  e1 <- runCommand' "stack install liquidhaskell" 
+  e2 <- foldlM runLiquidProof e1 liquidFiles
+  e3 <- runCommand' "stack exec -- liquid src/StringMatching.hs "  
+  e4 <- return mempty --   runCommand' "stack exec -- liquid src/AutoStringMatching.hs --debug" 
+  return $ mconcat [e1, e2, e3, e4]
+
+
+instance Monoid ExitCode where
+  mempty = ExitSuccess
+  mappend (ExitFailure i) _ = ExitFailure i 
+  mappend _ (ExitFailure i) = ExitFailure i 
+  mappend _ _ = ExitSuccess  
+

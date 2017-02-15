@@ -1,3 +1,39 @@
+{-# LANGUAGE CPP                  #-}
+#ifdef MainCall
+
+#else  
+
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE DeriveTraversable   #-}
+{-# LANGUAGE CPP                 #-}
+
+{-@ LIQUID "--higherorder"         @-}
+{-@ LIQUID "--totality"            @-}
+{-@ LIQUID "--exactdc"             @-}
+{-@ LIQUID "--trust-internals"     @-}
+
+
+{-@ infix <+> @-}
+{-@ infix <> @-}
+
+import Language.Haskell.Liquid.ProofCombinators 
+
+
+
+import Prelude hiding ( mempty, mappend, mconcat, map, Monoid
+                      , take, drop  
+                      , error, undefined
+                      )
+
+
+#include "../Data/List/RList.hs"
+
+#endif
 {-@ listRightId :: xs:List a -> { append N xs = xs } @-} 
 listRightId :: List a -> Proof 
 listRightId xs = append N xs ==. xs *** QED 
@@ -33,8 +69,15 @@ listAssoc (C x xs) y z
   *** QED 
 
 
-{-@ listTakeDrop :: i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} / [llen xs] @-}
+{-@ listTakeDrop :: 
+  i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  
+  -> {xs == append (take i xs) (drop i xs)} / [llen xs] @-}
 listTakeDrop :: Int -> List a -> Proof 
+listTakeDrop i N
+  =   append (take i N) (drop i N)
+  ==. append N N 
+  ==. N 
+  *** QED 
 listTakeDrop i xs | i == 0 
   =   append (take i xs) (drop i xs)
   ==. append N xs 

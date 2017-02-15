@@ -12,10 +12,11 @@
 {-# LANGUAGE CPP                 #-}
 
 {-@ LIQUID "--higherorder"         @-}
-{-@ LIQUID "--totality"            @-}
+{-  LIQUID "--totality"            @-}
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--no-measure-fields"   @-}
 {-@ LIQUID "--trust-internals"     @-}
+{-@ LIQUID "--automatic-instances=liquidinstanceslocal" @-}
 
 {-@ infix <+> @-}
 {-@ infix <>  @-}
@@ -37,56 +38,59 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs"  
 #include "../Data/StringMatching/StringMatching.hs"
-#include "../Proofs/ListMonoidLemmata.hs"
+#include "../AutoProofs/ListMonoidLemmata.hs"
 
 #ifdef IncludedListLemmata
 #else  
-#include "../Proofs/ListLemmata.hs"   
+#include "../AutoProofs/ListLemmata.hs"   
 #endif
 
 #endif
 
 #ifdef IncludedtoSMEmpty
 #else  
-#include "../Proofs/toSMEmpty.hs"   
+#include "../AutoProofs/toSMEmpty.hs"   
 #endif
 
 #ifdef IncludedMonoidEmptyRight
 #else  
-#include "../Proofs/MonoidEmptyRight.hs"   
+#include "../AutoProofs/MonoidEmptyRight.hs"   
 #endif
 
 #ifdef IncludedMonoidEmptyLeft
 #else  
-#include "../Proofs/MonoidEmptyLeft.hs"   
+#include "../AutoProofs/MonoidEmptyLeft.hs"   
 #endif
 
 #ifdef IncludedmapCastId
 #else  
-#include "../Proofs/mapCastId.hs"   
+#include "../AutoProofs/mapCastId.hs"   
 #endif
 
 #ifdef IncludedshiftIndicesRight
 #else  
-#include "../Proofs/shiftIndicesRight.hs"   
+#include "../AutoProofs/shiftIndicesRight.hs"   
 #endif
 
 #ifdef IncludedmergeIndices
 #else  
-#include "../Proofs/mergeIndices.hs"   
+#include "../AutoProofs/mergeIndices.hs"   
 #endif
 
 #ifdef IncludedcatIndices
 #else  
-#include "../Proofs/catIndices.hs"   
+#include "../AutoProofs/catIndices.hs"   
 #endif
 
 #ifdef IncludedconcatMakeIndices
 #else  
-#include "../Proofs/concatMakeIndices.hs"   
+#include "../AutoProofs/concatMakeIndices.hs"   
 #endif
 
 #ifdef CheckDistributeInput 
+
+{- FAILS automatic-instances distributestoSM @-}
+
 distributestoSM :: forall (target :: Symbol). (KnownSymbol target) => SM target -> RString -> RString -> Proof 
 {-@ distributestoSM :: SM target -> x1:RString -> x2:RString 
   -> {toSM (x1 <+> x2) ==  (toSM x1) <> (toSM x2)} @-} 
@@ -143,29 +147,20 @@ distributestoSM _ x y
 
 {-@ type RStringNE = {v:RString | 0 < stringLen v } @-}
 
+{-@ automatic-instances mergeNewIndices @-}
+
 mergeNewIndices :: RString -> RString -> RString -> Proof
 {-@ mergeNewIndices :: tg:RString -> x1:RStringNE -> x2:RStringNE 
   -> {append (makeSMIndices x1 tg) (makeNewIndices x1 x2 tg) == makeIndices (x1 <+> x2) tg 0 (stringLen x1 - 1)} @-}
 mergeNewIndices tg x1 x2  
   | stringLen tg < 2 
-  =   makeSMIndices x1 tg        `append` makeNewIndices x1 x2 tg
-  ==. makeIndices x1 tg 0 hi     `append` makeNewIndices x1 x2 tg
-  ==. makeIndices x1 tg 0 hi     `append` N
-  ==. makeIndices x1 tg 0 hi 
-      ? appendNil (makeIndices x1 tg 0 hi)
-  ==. makeIndices x tg 0 hi
-      ? concatMakeIndices 0 hi tg x1 x2
-  *** QED 
+  =   appendNil (makeIndices x1 tg 0 hi)
+  &&& concatMakeIndices 0 hi tg x1 x2
   | stringLen x1  < stringLen tg
-  =   makeSMIndices x1 tg        `append` makeNewIndices x1 x2 tg
-  ==. makeIndices x1 tg 0 hi     `append` makeNewIndices x1 x2 tg
-  ==. N                          `append` makeIndices x tg 0  hi
-      ? makeIndicesNull x1 tg 0 hi
-  ==. makeIndices x  tg 0 hi
-  *** QED 
-  | otherwise {- stringLen tg <= stringLen x1 -}
+  =   makeIndicesNull x1 tg 0 hi
+  &&& listRightId (makeIndices x tg 0 hi)
+  | otherwise {- stringLen tg <= stringLen x1 -}   
   =   makeSMIndices x1 tg     `append` makeNewIndices x1 x2 tg
-  ==. makeIndices x1 tg 0 hi  `append` makeNewIndices x1 x2 tg
   ==. makeIndices x1 tg 0 hi  `append` makeIndices x tg lo hi
   ==. makeIndices x  tg 0 mid `append` makeIndices x tg (mid+1) hi 
       ? catIndices x1 x2 tg 0 hi

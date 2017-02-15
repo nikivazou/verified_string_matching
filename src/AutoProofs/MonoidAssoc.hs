@@ -16,6 +16,7 @@
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--no-measure-fields"   @-}
 {-@ LIQUID "--trust-internals"     @-}
+{-@ LIQUID "--automatic-instances=liquidinstanceslocal" @-}
 
 {-@ infix <+> @-}
 {-@ infix <>  @-}
@@ -34,59 +35,56 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs"  
 #include "../Data/StringMatching/StringMatching.hs"
-#include "../Proofs/ListMonoidLemmata.hs"
+#include "../AutoProofs/ListMonoidLemmata.hs"
 
 
 
 #define CheckMonoidAssoc
 #endif
 
-#ifdef IncludedListLemmata
-#else  
-#include "../Proofs/ListLemmata.hs"   
-#endif
-
 #ifdef IncludedshiftNewIndices
 #else  
-#include "../Proofs/shiftNewIndices.hs"   
+#include "../AutoProofs/shiftNewIndices.hs"   
+#endif
+
+#ifdef IncludedshiftNewIndicesLeft
+#else  
+#include "../AutoProofs/shiftNewIndicesLeft.hs"   
+#endif
+
+#ifdef IncludedListLemmata
+#else  
+#include "../AutoProofs/ListLemmata.hs"   
 #endif
 
 #ifdef IncludedemptyIndices
 #else  
-#include "../Proofs/emptyIndices.hs"   
+#include "../AutoProofs/emptyIndices.hs"   
 #endif
 
 #ifdef IncludedcastShift
 #else  
-#include "../Proofs/castShift.hs"   
+#include "../AutoProofs/castShift.hs"   
 #endif
 
 #ifdef IncludedshiftNewIndicesRight
 #else  
-#include "../Proofs/shiftNewIndicesRight.hs"   
+#include "../AutoProofs/shiftNewIndicesRight.hs"   
 #endif
-
-
-#ifdef IncludedshiftNewIndicesLeft
-#else  
-#include "../Proofs/shiftNewIndicesLeft.hs"   
-#endif
-
 
 #ifdef IncludedmapLenFusion
 #else  
-#include "../Proofs/mapLenFusion.hs"   
+#include "../AutoProofs/mapLenFusion.hs"   
 #endif
 
 #ifdef IncludedcastConcat
 #else  
-#include "../Proofs/castConcat.hs"   
+#include "../AutoProofs/castConcat.hs"   
 #endif
 
 #define IncludedMonoidAssoc
 
 #ifdef CheckMonoidAssoc 
-
 
 {-@ mappend_assoc :: x:SM target -> y:SM target -> z:SM target -> { x <> (y <> z) = (x <> y) <> z} @-}
 mappend_assoc
@@ -147,9 +145,6 @@ mappend_assoc x@(SM xi xis) y@(SM yi yis) z@(SM zi zis)
         input      = xi <+> (yi <+> zi)
 
 
-
-
-
 {-@ inline makeIs2left @-}
 {-@ inline makeIs3left @-}
 {-@ inline makeIs4left @-}
@@ -171,6 +166,7 @@ makeIs3right tg xi yi zi yis
   = map (castGoodIndexRight tg (xi <+> yi) zi) (map (shiftStringRight tg xi yi) yis)
 makeIs4right tg xi yi zi     
   = makeNewIndices (xi <+> yi) zi tg
+
 
 assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) => 
   SM target -> RString -> RString -> RString -> RString -> List Int -> Proof

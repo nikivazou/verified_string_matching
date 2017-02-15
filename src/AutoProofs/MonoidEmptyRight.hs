@@ -16,6 +16,7 @@
 {-@ LIQUID "--exactdc"             @-}
 {-@ LIQUID "--no-measure-fields"   @-}
 {-@ LIQUID "--trust-internals"     @-}
+{-@ LIQUID "--automatic-instances=liquidinstanceslocal" @-}
 
 {-@ infix <+> @-}
 {-@ infix <>  @-}
@@ -34,52 +35,34 @@ import Prelude hiding ( mempty, mappend, id, mconcat, map
 
 #include "../Data/List/RList.hs"  
 #include "../Data/StringMatching/StringMatching.hs" 
-#include "../Proofs/ListMonoidLemmata.hs"       
+#include "../AutoProofs/ListMonoidLemmata.hs"       
 
 #define CheckMonoidEmptyRight
 #endif
 
 #ifdef IncludedmakeNewIndicesNullRight
 #else
-#include "../Proofs/makeNewIndicesNullRight.hs"
+#include "../AutoProofs/makeNewIndicesNullRight.hs"
 #endif
 
 #ifdef IncludedmapShiftZero
 #else
-#include "../Proofs/mapShiftZero.hs"
+#include "../AutoProofs/mapShiftZero.hs"
 #endif
 
 #define IncludedMonoidEmptyRight
 
 #ifdef CheckMonoidEmptyRight
 
+{-@ automatic-instances smRightId @-}
+
 smRightId :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
 {-@ smRightId :: xs:SM target -> {mempty <> xs == xs } @-}
 smRightId (SM i is)
   =   let tg = (fromString (symbolVal (Proxy :: Proxy target))) in 
-      (mempty :: SM target) <> (SM i is) 
-  ==. (SM stringEmp N) <> (SM i is) 
-  ==. SM (stringEmp <+> i)
-       ((map (castGoodIndexRight tg stringEmp i) N
-          `append`
-        makeNewIndices stringEmp i tg 
-       ) `append`
-       (map (shiftStringRight tg stringEmp i) is)) 
-       ? stringRightId i
-  ==. SM i
-        ((N `append` makeNewIndices stringEmp i tg)
-         `append`
-        (map (shiftStringRight tg stringEmp i) is)) 
-  ==. SM i
-       (makeNewIndices stringEmp i tg
-        `append`
-       (map (shiftStringRight tg stringEmp i) is)) 
-  ==. SM i (N `append` (map (shiftStringRight tg stringEmp i) is)) 
-       ? makeNewIndicesNullRight i tg
-  ==. SM i (map (shiftStringRight tg stringEmp i) is)
-       ? mapShiftZero tg i is 
-  ==. SM i is 
-  *** QED 
+      stringRightId i
+  &&& makeNewIndicesNullRight i tg
+  &&& mapShiftZero tg i is 
 
 mempty_right :: forall (target :: Symbol). (KnownSymbol target) => SM target -> Proof
 {-@ mempty_right :: xs:SM target -> {mempty <> xs == xs } @-}

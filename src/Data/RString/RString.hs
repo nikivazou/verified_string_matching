@@ -72,6 +72,24 @@ fromString = S . ST.fromString
 isNullString :: RString -> Bool 
 isNullString (S s) = BS.length s == 0 
 
+
+------------------------------------------------------------------------------
+---------------  RStrings is Monoid ---------------------------
+------------------------------------------------------------------------------
+
+stringLeftId :: RString -> Proof
+{-@ assume stringLeftId :: x:RString -> { x <+> stringEmp == x} @-}
+stringLeftId _ = trivial
+
+
+stringRightId :: RString -> Proof
+{-@ assume stringRightId :: x:RString -> {stringEmp <+> x == x} @-}
+stringRightId _ = trivial
+
+stringAssoc :: RString -> RString -> RString -> Proof
+{-@ assume stringAssoc :: x:RString -> y:RString -> z:RString 
+     -> {(x <+> y) <+> z == x <+> (y <+> z) } @-}
+stringAssoc _ _ _ = trivial
 ------------------------------------------------------------------------------
 ---------------  Properties assumed for RStrings ---------------------------
 ------------------------------------------------------------------------------
@@ -82,9 +100,13 @@ isNullString (S s) = BS.length s == 0
 stringEmpProp :: RString -> Proof
 stringEmpProp _ = trivial 
  
+
 concatStringNeutralLeft :: RString -> Proof
 {-@ assume concatStringNeutralLeft :: x:RString -> { x <+> stringEmp == x} @-}
 concatStringNeutralLeft _ = trivial
+
+
+
 
 concatStringNeutralRight :: RString -> Proof
 {-@ assume concatStringNeutralRight :: x:RString -> {stringEmp <+> x == x} @-}
@@ -95,7 +117,7 @@ concatEmpLeft :: RString -> RString -> Proof
 concatEmpLeft xi yi 
   =   (xi <+> yi) 
   ==. (stringEmp <+> yi) ? stringEmpProp xi 
-  ==. yi                        ? concatStringNeutralRight yi
+  ==. yi                 ? concatStringNeutralRight yi
   *** QED 
 
 

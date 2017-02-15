@@ -1,3 +1,5 @@
+#define IncludeddistributeInput
+
 {-@ distributeInput
      :: f:(RString -> Monoid a)
      -> thm:(x1:RString -> x2:RString -> {f (x1 <+> x2) ==  (f x1) <> (f x2)} )
@@ -17,7 +19,6 @@ distributeInput f thm is n
   =   mconcat (map f (chunkString n is))
   ==. mconcat (map f (C is N))
   ==. mconcat (f is `C` map f N)
---   ==. mconcat (f is `C` N)
   ==. (f is) <> (mconcat N)
   ==. (f is) <> (mempty :: Monoid a)
   ==. f is ? mempty_left (f is)
