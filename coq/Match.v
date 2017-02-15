@@ -82,6 +82,8 @@ Inductive validSM tg : SM tg -> Prop :=
               (List.Forall (isGoodIndex input tg) l) ->
               validSM tg (Sm tg input l).
 
+Hint Constructors validSM.
+
 (* String manipulation lemmas *)
 Lemma subStrAppendRight : forall (sl sr : string) (i j : nat),
   i + j <= length sl -> substring i j sl = substring i j (sl ◇ sr).
@@ -401,6 +403,23 @@ Definition sm_mappend tg (sm1 sm2 : SM tg) :=
   let yis' := map (shiftStringRight tg x y) yis in
   Sm tg (x ◇ y) (List.app xis' (List.app xyis yis')).
 
+Lemma sm_mappend_valid tg sm1 sm2 : 
+  validSM tg sm1 -> validSM tg sm2 -> validSM tg (sm_mappend tg sm1 sm2).
+Proof.
+  move: sm1 sm2 => [x xis] [y yis] H1 H2.
+  inversion_clear H1.
+  inversion_clear H2.
+  constructor; simpl. 
+  eapply forall_append; eauto.
+  - induction xis; eauto; constructor; inversion H; subst; simpl in *; eauto.
+    eapply goodIndexLeft; eauto.
+  - eapply forall_append; eauto.
+    + eapply makeNewIndices_correct; eauto.
+    + induction yis; eauto; constructor; inversion H0; subst; simpl in *; eauto.
+      unfold shiftStringRight; simpl in *; eauto.
+      eapply shiftStringRightCorrect; eauto.
+Qed.
+
 Theorem sm_id_left tg (sm : SM tg) : 
   sm_mappend tg (sm_nil tg) sm = sm.
 Proof. 
@@ -499,8 +518,7 @@ Proof.
   erewrite shiftTwice; eauto.
   rewrite !List.app_assoc; auto.
   f_equal.
-  (* This is the actual assocNewIndices I think. 
-     Renaming for compatibility *)
+  (* This is the actual assocNewIndices I think. *)
   destruct (String.length tg <= String.length yi) eqn:LenTgYi.
   + rewrite shiftIndexesLeft; eauto.
     rewrite -!List.app_assoc; auto.
@@ -629,6 +647,102 @@ WARNING: uncommenting this will take forever
  Print sm_mappend_assoc. 
 
 *)
+
+(* Intrinsic version (for monoid instance) *)
+Inductive sm tg : Prop :=
+| mk_sm : forall xs l, List.Forall (isGoodIndex xs tg) l -> sm tg.
+
+Lemma isGoodIndexNull : forall tg x, isGoodIndex "" tg x -> tg = "".
+Proof.
+  unfold isGoodIndex => tg x [H1 H2]; simpl in *.
+  destruct x; auto.
+  destruct (String.length tg); auto.
+Qed.
+
+Lemma isGoodIndexNullTg : forall x s, x <= length s -> isGoodIndex s "" x.
+  induction x => s H; unfold isGoodIndex; split; simpl in *; eauto.
+  - destruct s; auto.
+  - destruct s; simpl; auto.
+    destruct (IHx s) as [H1 H2]; simpl in *; auto.
+Qed.
+
+Definition empty_sm tg : sm tg.
+  eapply (mk_sm tg "" nil); eauto.
+Defined.
+
+Lemma validSM_goodIndex tg input l :
+  validSM tg (Sm tg input l) -> List.Forall (isGoodIndex input tg) l.
+Proof.
+ move => H; inversion H; auto.
+Qed.
+
+Definition mappend_sm tg (sm1 sm2 : sm tg) : sm tg.
+  move: sm1 sm2 => [xs1 l1 H1] [xs2 l2 H2].
+  destruct (sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2)) eqn:App.
+  apply (mk_sm tg input l).
+  apply validSM_goodIndex.
+  rewrite -App.
+  apply sm_mappend_valid; auto.
+Defined.
+
+Lemma sm_mappend_valid' tg xs1 l1 xs2 l2 xs' l' :
+  List.Forall (isGoodIndex xs1 tg) l1 -> 
+  List.Forall (isGoodIndex xs2 tg) l2 ->
+  sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2) = Sm tg xs' l' ->
+  List.Forall (isGoodIndex xs' tg) l'.
+Proof. 
+  move => H1 H2 Eq.
+  apply validSM_goodIndex.
+  rewrite -Eq.
+  apply sm_mappend_valid; auto.
+Qed.
+
+Import Coq.Logic.ProofIrrelevance.
+
+Lemma proof_irrelevant_equality tg xs xs' l H l' H' : 
+  xs = xs' -> l = l' -> mk_sm tg xs l H = mk_sm tg xs' l' H'.
+Proof.
+  move => EqXs EqLs.
+  move: H H'.
+  rewrite -EqLs -EqXs=> H H'.
+  assert (PI: H = H') by (apply proof_irrelevance).
+  rewrite PI; auto.
+Qed.
+
+Instance monoid_sm tg : Monoid (sm tg) := 
+  { ε := empty_sm tg ;
+    mappend sm1 sm2 := 
+      match sm1, sm2 with 
+        | mk_sm xs1 l1 H1, mk_sm xs2 l2 H2 => 
+            let s := sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2) in
+            let App := erefl s in
+            (match s as s0
+              return (sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2) = s0 -> sm tg)
+            with
+              | Sm xs' l' => fun _ => mk_sm tg xs' l' _
+            end) App
+      end
+  }.
+- eapply (sm_mappend_valid' _ xs1 l1 xs2 l2); eauto. 
+- (* Commutativity - will require proof irrelevance *)
+  move => [xs xl xH] [ys yl yH] [zs zl zH] //=.
+  assert (Vx : validSM tg (Sm tg xs xl)) by auto.
+  assert (Vy : validSM tg (Sm tg ys yl)) by auto.
+  assert (Vz : validSM tg (Sm tg zs zl)) by auto.
+  move: (sm_mappend_assoc tg (Sm tg xs xl) (Sm tg ys yl) (Sm tg zs zl) Vx Vy Vz) => Hyp.
+  inversion Hyp; subst; auto.
+  apply proof_irrelevant_equality; auto.
+- (* id-left *)
+  move => [xs l H] //=.
+  apply proof_irrelevant_equality; auto.
+  rewrite newIsNullLeft; simpl; auto.
+  rewrite (mapShiftZero l tg xs); auto.
+- (* id-right *)
+  move => [xs l H] //=.
+  apply proof_irrelevant_equality; [ apply string_app_nil_r; auto | ].
+  rewrite newIsNullRight.
+  rewrite !List.app_nil_r; auto.
+Qed.
 
 Definition toSM (tg x: string) := Sm tg x (makeIndices x tg 0 (length x)).
 Hint Unfold toSM.
