@@ -833,3 +833,21 @@ Instance monoid_morphism tg : MonoidMorphism (to_sm tg) :=
   { morphism_mempty := to_sm_mempty tg
   ; morphism_mappend := to_sm_mappend tg
   }.
+
+Import Fuel.
+Definition toSMPar tg x i j := 
+  match chunk (length x).+1 j x with
+    | Some l => pmconcat (length (pmap (to_sm tg) l)).+1 i (pmap (to_sm tg) l)
+    | _ => None 
+  end.
+
+Theorem final_theorem (tg x : string) i j : 
+  i > 0 -> j > 0 ->
+  toSMPar tg x i j = Some (to_sm tg x).
+Proof.
+  move => HI HJ.
+  pose proof (parallelization_correct (to_sm tg) x i j HI HJ) as H.
+  move: H => [l [HC HP]].
+  unfold toSMPar.
+  rewrite HC; auto.
+Qed.  
