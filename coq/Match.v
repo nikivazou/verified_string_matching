@@ -7,7 +7,6 @@ Require Import Monoid.
 
 Set Bullet Behavior "Strict Subproofs".
 
-
 Lemma string_app_assoc : forall x y z : string, x ++ y ++ z = (x ++ y) ++ z.
 Admitted. (* Admitted, like in Liquid Haskell *)
 
@@ -52,8 +51,6 @@ Instance chunkable_string : ChunkableMonoid string :=
 - by apply string_take_drop.
 Defined.
 
-Definition Symbol := string.
-
 Definition isGoodIndex (input tg : string) (i : nat) :=
   (substring i (length tg) input) = tg
   /\ i + length tg <= length input.
@@ -74,7 +71,7 @@ Proof.
 Qed.
 
 (* Extrinsic verification is so much easier :) *)
-Inductive SM (tg : Symbol) :=
+Inductive SM (tg : string) :=
 | Sm : forall (input : string) (l : list nat), SM tg.
 
 Inductive validSM tg : SM tg -> Prop := 
@@ -99,6 +96,11 @@ Proof.
     rewrite Hyp; auto.
 Qed. (* Proving some things admitted in Liquid Haskell just to be sure *)
 
+Lemma substring_append_left :
+  forall (sl sr : string) (i j : nat), 
+  substring i j sr = substring (i + length sl) j (sl ◇ sr).
+Admitted. (* Just like in liquid Haskell *)
+    
 Lemma append_length : forall sl sr, length sl <= length (sl ++ sr).
   move => sl; induction sl => sr; simpl; auto.
   eapply leq_ltn_trans; eauto.
@@ -158,11 +160,6 @@ Qed.
 Definition shiftStringRight (tg sl sr : string) (i : nat) : nat :=
   i + length sl.
 
-Lemma substring_append_left :
-  forall (sl sr : string) (i j : nat), 
-  substring i j sr = substring (i + length sl) j (sl ◇ sr).
-Admitted. (* Just like in liquid Haskell *)
-    
   
 Lemma shiftStringRightCorrect : 
   forall tg sl sr i, isGoodIndex sr tg i -> 
@@ -649,7 +646,7 @@ WARNING: uncommenting this will take forever
 *)
 
 (* Intrinsic version (for monoid instance) *)
-Inductive sm tg : Prop :=
+Inductive sm tg : Type :=
 | mk_sm : forall xs l, List.Forall (isGoodIndex xs tg) l -> sm tg.
 
 Lemma isGoodIndexNull : forall tg x, isGoodIndex "" tg x -> tg = "".
@@ -742,7 +739,13 @@ Instance monoid_sm tg : Monoid (sm tg) :=
   apply proof_irrelevant_equality; [ apply string_app_nil_r; auto | ].
   rewrite newIsNullRight.
   rewrite !List.app_nil_r; auto.
-Qed.
+Defined.
+
+Instance chunkable_sm tg : ChunkableMonoid (sm tg) :=
+  { length xsm := 
+      let '(mk_sm x l H) := xsm in length x 
+  }.
+Admitted.
 
 Definition toSM (tg x: string) := Sm tg x (makeIndices x tg 0 (length x)).
 Hint Unfold toSM.
@@ -796,3 +799,37 @@ Theorem toSM_append : forall tg x y, toSM tg (x ◇ y) = sm_mappend tg (toSM tg 
     eapply makeIndicesSplit; eauto.
     ssromega.
 Qed.
+
+Lemma to_sm_valid : forall tg x, validSM tg (toSM tg x).
+Proof.
+  move => tg x; constructor.
+  eapply makeIndicesAux_correct.
+Qed.
+
+Lemma to_sm_aux tg x x' l' (Hyp : toSM tg x = Sm tg x' l') : List.Forall (isGoodIndex x' tg) l'.
+  apply validSM_goodIndex; rewrite -Hyp; apply to_sm_valid.
+Qed.
+
+Definition to_sm tg x : sm tg := 
+  let s := toSM tg x in 
+  let App := erefl s in
+  match s as s0 return toSM tg x = s0 -> sm tg with
+    | Sm x' l' => fun Eq => mk_sm tg x' l' (to_sm_aux tg x x' l' Eq)
+  end App.
+
+Lemma to_sm_mempty tg : to_sm tg ε = ε.
+  unfold to_sm, ε, empty_sm; simpl; auto. unfold empty_sm; simpl.
+  apply proof_irrelevant_equality; auto.
+Qed.
+
+Lemma to_sm_mappend tg x y : to_sm tg (x ◇ y) = (to_sm tg x) ◇ (to_sm tg y).
+  unfold to_sm; simpl; auto.
+  apply proof_irrelevant_equality; auto.
+  pose proof (toSM_append tg x y) as H; unfold toSM in H; simpl in *.
+  inversion H; auto.
+Qed.
+
+Instance monoid_morphism tg : MonoidMorphism (to_sm tg) := 
+  { morphism_mempty := to_sm_mempty tg
+  ; morphism_mappend := to_sm_mappend tg
+  }.
