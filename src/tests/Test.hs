@@ -14,7 +14,7 @@ main = do
   -- putStrLn "\nTest Runtime..."
   -- testRunTime ()
   putStrLn "\nRun Liquid... "
-  cd <- runLiquid ()
+  cd <- timeLiquid ()
   putStrLn "\nDone Testing"
   exitWith cd 
 
@@ -142,8 +142,9 @@ liquidFiles
 runLiquidProof :: ExitCode -> String -> IO ExitCode
 
 runLiquidProof i fm
-  = do pf <- runCommand' ("cd src; stack exec -- liquid AutoProofs/" ++ fm ++ "> log 2>&1 ; cd ..")
-       return $ mconcat [i, pf]
+  = do pf <- runCommand' ("cd src; time stack exec -- liquid AutoProofs/" ++ fm ++ "> log 2>&1 ; cd ..")
+       af <- runCommand' ("cd src; time stack exec -- liquid Proofs/" ++ fm ++ "> log 2>&1 ; cd ..") 
+       return $ mconcat [i, pf, af]
 {-   
   = do pf <- runCommand ("stack exec -- liquid Proofs/"     ++ fm) >>= waitForProcess
        ap <- runCommand ("stack exec -- liquid AutoProofs/" ++ fm) >>= waitForProcess
@@ -157,11 +158,21 @@ runCommand' str =
      putStrLn ("\nCommand `" ++ str ++ "` exited with " ++ show ec)
      return ec
 
+
+timeLiquid :: ()   -> IO ExitCode
+timeLiquid _ = do 
+  e1 <- runCommand' "stack install liquidhaskell" 
+--   e2 <- foldlM runLiquidProof e1 liquidFiles
+  e2 <- runLiquidProof mempty "PmconcatEquivalence" --  runCommand' "time stack exec -- liquid src/StringMatching.hs "  
+  e3 <- runCommand' "time stack exec -- liquid src/StringMatching.hs "  
+  e4 <- runCommand' "time stack exec -- liquid src/AutoStringMatching.hs "  
+  return $ mconcat [e1, e2, e3, e4]
+
 runLiquid :: ()   -> IO ExitCode
 runLiquid _ = do 
   e1 <- runCommand' "stack install liquidhaskell" 
   e2 <- foldlM runLiquidProof e1 liquidFiles
-  e3 <- runCommand' "stack exec -- liquid src/StringMatching.hs "  
+  e3 <- runCommand' "time stack exec -- liquid src/StringMatching.hs "  
   e4 <- return mempty --   runCommand' "stack exec -- liquid src/AutoStringMatching.hs --debug" 
   return $ mconcat [e1, e2, e3, e4]
 
