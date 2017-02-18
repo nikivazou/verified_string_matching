@@ -7,7 +7,6 @@ Require Import Monoid.
 
 Set Bullet Behavior "Strict Subproofs".
 
-
 Lemma string_app_assoc : forall x y z : string, x ++ y ++ z = (x ++ y) ++ z.
 Admitted. (* Admitted, like in Liquid Haskell *)
 
@@ -52,8 +51,6 @@ Instance chunkable_string : ChunkableMonoid string :=
 - by apply string_take_drop.
 Defined.
 
-Definition Symbol := string.
-
 Definition isGoodIndex (input tg : string) (i : nat) :=
   (substring i (length tg) input) = tg
   /\ i + length tg <= length input.
@@ -74,13 +71,15 @@ Proof.
 Qed.
 
 (* Extrinsic verification is so much easier :) *)
-Inductive SM (tg : Symbol) :=
+Inductive SM (tg : string) :=
 | Sm : forall (input : string) (l : list nat), SM tg.
 
 Inductive validSM tg : SM tg -> Prop := 
 | ValidSM : forall input l,
               (List.Forall (isGoodIndex input tg) l) ->
               validSM tg (Sm tg input l).
+
+Hint Constructors validSM.
 
 (* String manipulation lemmas *)
 Lemma subStrAppendRight : forall (sl sr : string) (i j : nat),
@@ -97,6 +96,11 @@ Proof.
     rewrite Hyp; auto.
 Qed. (* Proving some things admitted in Liquid Haskell just to be sure *)
 
+Lemma substring_append_left :
+  forall (sl sr : string) (i j : nat), 
+  substring i j sr = substring (i + length sl) j (sl ◇ sr).
+Admitted. (* Just like in liquid Haskell *)
+    
 Lemma append_length : forall sl sr, length sl <= length (sl ++ sr).
   move => sl; induction sl => sr; simpl; auto.
   eapply leq_ltn_trans; eauto.
@@ -156,11 +160,6 @@ Qed.
 Definition shiftStringRight (tg sl sr : string) (i : nat) : nat :=
   i + length sl.
 
-Lemma substring_append_left :
-  forall (sl sr : string) (i j : nat), 
-  substring i j sr = substring (i + length sl) j (sl ◇ sr).
-Admitted. (* Just like in liquid Haskell *)
-    
   
 Lemma shiftStringRightCorrect : 
   forall tg sl sr i, isGoodIndex sr tg i -> 
@@ -401,6 +400,23 @@ Definition sm_mappend tg (sm1 sm2 : SM tg) :=
   let yis' := map (shiftStringRight tg x y) yis in
   Sm tg (x ◇ y) (List.app xis' (List.app xyis yis')).
 
+Lemma sm_mappend_valid tg sm1 sm2 : 
+  validSM tg sm1 -> validSM tg sm2 -> validSM tg (sm_mappend tg sm1 sm2).
+Proof.
+  move: sm1 sm2 => [x xis] [y yis] H1 H2.
+  inversion_clear H1.
+  inversion_clear H2.
+  constructor; simpl. 
+  eapply forall_append; eauto.
+  - induction xis; eauto; constructor; inversion H; subst; simpl in *; eauto.
+    eapply goodIndexLeft; eauto.
+  - eapply forall_append; eauto.
+    + eapply makeNewIndices_correct; eauto.
+    + induction yis; eauto; constructor; inversion H0; subst; simpl in *; eauto.
+      unfold shiftStringRight; simpl in *; eauto.
+      eapply shiftStringRightCorrect; eauto.
+Qed.
+
 Theorem sm_id_left tg (sm : SM tg) : 
   sm_mappend tg (sm_nil tg) sm = sm.
 Proof. 
@@ -499,8 +515,7 @@ Proof.
   erewrite shiftTwice; eauto.
   rewrite !List.app_assoc; auto.
   f_equal.
-  (* This is the actual assocNewIndices I think. 
-     Renaming for compatibility *)
+  (* This is the actual assocNewIndices I think. *)
   destruct (String.length tg <= String.length yi) eqn:LenTgYi.
   + rewrite shiftIndexesLeft; eauto.
     rewrite -!List.app_assoc; auto.
@@ -630,6 +645,108 @@ WARNING: uncommenting this will take forever
 
 *)
 
+(* Intrinsic version (for monoid instance) *)
+Inductive sm tg : Type :=
+| mk_sm : forall xs l, List.Forall (isGoodIndex xs tg) l -> sm tg.
+
+Lemma isGoodIndexNull : forall tg x, isGoodIndex "" tg x -> tg = "".
+Proof.
+  unfold isGoodIndex => tg x [H1 H2]; simpl in *.
+  destruct x; auto.
+  destruct (String.length tg); auto.
+Qed.
+
+Lemma isGoodIndexNullTg : forall x s, x <= length s -> isGoodIndex s "" x.
+  induction x => s H; unfold isGoodIndex; split; simpl in *; eauto.
+  - destruct s; auto.
+  - destruct s; simpl; auto.
+    destruct (IHx s) as [H1 H2]; simpl in *; auto.
+Qed.
+
+Definition empty_sm tg : sm tg.
+  eapply (mk_sm tg "" nil); eauto.
+Defined.
+
+Lemma validSM_goodIndex tg input l :
+  validSM tg (Sm tg input l) -> List.Forall (isGoodIndex input tg) l.
+Proof.
+ move => H; inversion H; auto.
+Qed.
+
+Definition mappend_sm tg (sm1 sm2 : sm tg) : sm tg.
+  move: sm1 sm2 => [xs1 l1 H1] [xs2 l2 H2].
+  destruct (sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2)) eqn:App.
+  apply (mk_sm tg input l).
+  apply validSM_goodIndex.
+  rewrite -App.
+  apply sm_mappend_valid; auto.
+Defined.
+
+Lemma sm_mappend_valid' tg xs1 l1 xs2 l2 xs' l' :
+  List.Forall (isGoodIndex xs1 tg) l1 -> 
+  List.Forall (isGoodIndex xs2 tg) l2 ->
+  sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2) = Sm tg xs' l' ->
+  List.Forall (isGoodIndex xs' tg) l'.
+Proof. 
+  move => H1 H2 Eq.
+  apply validSM_goodIndex.
+  rewrite -Eq.
+  apply sm_mappend_valid; auto.
+Qed.
+
+Import Coq.Logic.ProofIrrelevance.
+
+Lemma proof_irrelevant_equality tg xs xs' l H l' H' : 
+  xs = xs' -> l = l' -> mk_sm tg xs l H = mk_sm tg xs' l' H'.
+Proof.
+  move => EqXs EqLs.
+  move: H H'.
+  rewrite -EqLs -EqXs=> H H'.
+  assert (PI: H = H') by (apply proof_irrelevance).
+  rewrite PI; auto.
+Qed.
+
+Instance monoid_sm tg : Monoid (sm tg) := 
+  { ε := empty_sm tg ;
+    mappend sm1 sm2 := 
+      match sm1, sm2 with 
+        | mk_sm xs1 l1 H1, mk_sm xs2 l2 H2 => 
+            let s := sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2) in
+            let App := erefl s in
+            (match s as s0
+              return (sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2) = s0 -> sm tg)
+            with
+              | Sm xs' l' => fun _ => mk_sm tg xs' l' _
+            end) App
+      end
+  }.
+- eapply (sm_mappend_valid' _ xs1 l1 xs2 l2); eauto. 
+- (* Commutativity - will require proof irrelevance *)
+  move => [xs xl xH] [ys yl yH] [zs zl zH] //=.
+  assert (Vx : validSM tg (Sm tg xs xl)) by auto.
+  assert (Vy : validSM tg (Sm tg ys yl)) by auto.
+  assert (Vz : validSM tg (Sm tg zs zl)) by auto.
+  move: (sm_mappend_assoc tg (Sm tg xs xl) (Sm tg ys yl) (Sm tg zs zl) Vx Vy Vz) => Hyp.
+  inversion Hyp; subst; auto.
+  apply proof_irrelevant_equality; auto.
+- (* id-left *)
+  move => [xs l H] //=.
+  apply proof_irrelevant_equality; auto.
+  rewrite newIsNullLeft; simpl; auto.
+  rewrite (mapShiftZero l tg xs); auto.
+- (* id-right *)
+  move => [xs l H] //=.
+  apply proof_irrelevant_equality; [ apply string_app_nil_r; auto | ].
+  rewrite newIsNullRight.
+  rewrite !List.app_nil_r; auto.
+Defined.
+
+Instance chunkable_sm tg : ChunkableMonoid (sm tg) :=
+  { length xsm := 
+      let '(mk_sm x l H) := xsm in length x 
+  }.
+Admitted.
+
 Definition toSM (tg x: string) := Sm tg x (makeIndices x tg 0 (length x)).
 Hint Unfold toSM.
 
@@ -682,3 +799,55 @@ Theorem toSM_append : forall tg x y, toSM tg (x ◇ y) = sm_mappend tg (toSM tg 
     eapply makeIndicesSplit; eauto.
     ssromega.
 Qed.
+
+Lemma to_sm_valid : forall tg x, validSM tg (toSM tg x).
+Proof.
+  move => tg x; constructor.
+  eapply makeIndicesAux_correct.
+Qed.
+
+Lemma to_sm_aux tg x x' l' (Hyp : toSM tg x = Sm tg x' l') : List.Forall (isGoodIndex x' tg) l'.
+  apply validSM_goodIndex; rewrite -Hyp; apply to_sm_valid.
+Qed.
+
+Definition to_sm tg x : sm tg := 
+  let s := toSM tg x in 
+  let App := erefl s in
+  match s as s0 return toSM tg x = s0 -> sm tg with
+    | Sm x' l' => fun Eq => mk_sm tg x' l' (to_sm_aux tg x x' l' Eq)
+  end App.
+
+Lemma to_sm_mempty tg : to_sm tg ε = ε.
+  unfold to_sm, ε, empty_sm; simpl; auto. unfold empty_sm; simpl.
+  apply proof_irrelevant_equality; auto.
+Qed.
+
+Lemma to_sm_mappend tg x y : to_sm tg (x ◇ y) = (to_sm tg x) ◇ (to_sm tg y).
+  unfold to_sm; simpl; auto.
+  apply proof_irrelevant_equality; auto.
+  pose proof (toSM_append tg x y) as H; unfold toSM in H; simpl in *.
+  inversion H; auto.
+Qed.
+
+Instance monoid_morphism tg : MonoidMorphism (to_sm tg) := 
+  { morphism_mempty := to_sm_mempty tg
+  ; morphism_mappend := to_sm_mappend tg
+  }.
+
+Import Fuel.
+Definition toSMPar tg x i j := 
+  match chunk (length x).+1 j x with
+    | Some l => pmconcat (length (pmap (to_sm tg) l)).+1 i (pmap (to_sm tg) l)
+    | _ => None 
+  end.
+
+Theorem final_theorem (tg x : string) i j : 
+  i > 0 -> j > 0 ->
+  toSMPar tg x i j = Some (to_sm tg x).
+Proof.
+  move => HI HJ.
+  pose proof (parallelization_correct (to_sm tg) x i j HI HJ) as H.
+  move: H => [l [HC HP]].
+  unfold toSMPar.
+  rewrite HC; auto.
+Qed.  
