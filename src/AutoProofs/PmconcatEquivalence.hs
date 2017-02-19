@@ -40,11 +40,13 @@ import Data.RString.RString
 
 #define CheckParEquivalence
 #define ParallelEvaluation
+#define MainCall
 
 #include "../Data/List/RList.hs"
 #include "../Data/RString/Chunk.hs"
 #include "../Data/List/MList.hs"
 #include "../Data/Monoid/PMonoid.hs"
+#include "../AutoProofs/ListMonoidLemmata.hs"
 
 #endif
 
