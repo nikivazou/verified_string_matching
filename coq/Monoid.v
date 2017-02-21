@@ -67,7 +67,7 @@ Proof.
   - (* take-spec *)
     move => i x HSize.
     rewrite seq.size_take.
-    destruct (i < size x) eqn:Size; ssromega.
+    destruct (i < size x) eqn:Size; auto. ssromega.
   - (* take-drop *)
     intros; symmetry; by apply seq.cat_take_drop.
 Defined.
@@ -87,8 +87,6 @@ Proof.
   unfold lt_len in *.
   ssromega.
 Qed.
-
-Module Fuel. 
 
 (* Approach 1: Fuel. Go extrinsic as much as possible *)
 Fixpoint chunk {A: Type} `{M: ChunkableMonoid A}
@@ -260,53 +258,6 @@ Definition chunk' {A : Type} `{M : ChunkableMonoid A}
     eapply chunk_res_not_none; eauto.
 Defined.
 Hint Unfold chunk'.
-
-End Fuel.
-
-Module Intrinsic.
-
-(*
-(* Intrinsic version. The "Program/measure" makes reasoning stupidly hard *)
-Program Fixpoint chunk {A: Type} `{M: ChunkableMonoid A}
-        (i : nat) (x : A) (HI : i > 0)
-        { measure (length x) }
-  : list A := 
-  match length x <= i with 
-    | true => [:: x]
-    | false => take i x :: chunk i (drop i x) HI
-  end.
-Next Obligation.
-  symmetry in Heq_anonymous.
-  move : Heq_anonymous => /leP Hyp.
-  rewrite drop_spec; ssromega.
-Defined.
-*)
-
-
-Definition lengthOrder {A} (ls1 ls2 : list A) :=
-  length ls1 < length ls2.
-
-Lemma lengthOrder_wf' {A} : forall len (ls : list A), length ls <= len -> Acc lengthOrder ls.
-  unfold lengthOrder; induction len => ls /leP HLen; simpl in *; auto.
-  - inversion HLen; constructor => ls' /ltP H.
-    rewrite H0 in H; inversion H.
-  - inversion HLen; constructor => ls' H'.
-    + destruct ls; simpl in *; try congruence.
-      eapply IHlen; eauto. ssromega.
-    + eapply IHlen; eauto; ssromega.
-Defined.
-
-Print lengthOrder_wf'.
-
-Theorem lengthOrder_wf {A} : well_founded (@lengthOrder A).
-  red; intro; eapply lengthOrder_wf'; eauto.
-Defined.
-
-
-
-End Intrinsic.
-
-Import Fuel.
 
 Fixpoint mconcat {M: Type} `{Monoid M} (l: list M): M :=
   match l with
