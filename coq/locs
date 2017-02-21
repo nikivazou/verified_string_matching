@@ -1,0 +1,17 @@
+Monoid: 
+549 all
+60 blank
+6 imports
+24 comments
+39 implementation
+121 spec
+549 - 121 - 39 - 24 - 6 - 60 = 299 proof
+
+Match:
+78 blank
+770 all
+8 imports
+37 comments
+83 implementation
+127 spec
+770 - 127 - 83 - 37 - 8 - 78 = 437 proof

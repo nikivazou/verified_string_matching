@@ -56,19 +56,13 @@ Definition isGoodIndex (input tg : string) (i : nat) :=
   /\ i + length tg <= length input.
 Hint Unfold isGoodIndex.
 
-Definition isGoodIndexDec : forall input tg i,
-                              {isGoodIndex input tg i} + {~ (isGoodIndex input tg i)}.
+Definition isGoodIndexDec input tg i: 
+  {isGoodIndex input tg i} + {~ (isGoodIndex input tg i)}.
 Proof.
-  move => input tg i.
-  destruct (string_dec (substring i (length tg) input) tg) eqn:Eq.
-  - destruct (i + length tg <= length input) eqn:Ineq; auto.
-    unfold isGoodIndex; right => Contra.
-    move: Contra => [_ Contra].
-    eauto.
-  - unfold isGoodIndex; right => Contra.
-    move: Contra => [Contra _].
-    eauto.
-Qed.
+  destruct (string_dec (substring i (length tg) input) tg) eqn:Eq;
+  destruct (i + length tg <= length input) eqn:Ineq; auto;
+  right => Contra; inversion Contra; eauto. 
+Qed.  
 
 (* Extrinsic verification is so much easier :) *)
 Inductive SM (tg : string) :=
@@ -136,9 +130,8 @@ Lemma makeIndicesAux_correct :
   forall cnt s tg lo,
     List.Forall (isGoodIndex s tg) (makeIndicesAux s tg lo cnt).
 Proof.
-  move => cnt; induction cnt => s tg lo.
-  - simpl; destruct (isGoodIndexDec s tg lo) eqn:Good; simpl; auto.
-  - simpl; destruct (isGoodIndexDec s tg lo) eqn:Good; simpl; auto.
+  move => cnt; induction cnt => s tg lo //=;
+  destruct (isGoodIndexDec s tg lo); simpl; auto.
 Qed.    
 
 Definition makeIndices (s tg : string) (lo hi : nat) : list nat :=
@@ -496,12 +489,14 @@ Proof.
 Qed.
 
 Theorem sm_mappend_assoc tg (sm1 sm2 sm3 : SM tg) :
-  validSM tg sm1 -> validSM tg sm2 -> validSM tg sm3 -> 
+  validSM tg sm2 ->
+(*   validSM tg sm1 -> validSM tg sm2 -> validSM tg sm3 ->  *)
   sm_mappend tg sm1 (sm_mappend tg sm2 sm3) =
   sm_mappend tg (sm_mappend tg sm1 sm2) sm3.
 Proof.
   simpl.
-  move => v1 v2 v3; 
+(*   move => v1 v2 v3; *) 
+  move => v2;
   destruct sm1 as [xi xs]; 
   destruct sm2 as [yi ys];
   destruct sm3 as [zi zs]; simpl; auto.
@@ -673,15 +668,6 @@ Proof.
  move => H; inversion H; auto.
 Qed.
 
-Definition mappend_sm tg (sm1 sm2 : sm tg) : sm tg.
-  move: sm1 sm2 => [xs1 l1 H1] [xs2 l2 H2].
-  destruct (sm_mappend tg (Sm tg xs1 l1) (Sm tg xs2 l2)) eqn:App.
-  apply (mk_sm tg input l).
-  apply validSM_goodIndex.
-  rewrite -App.
-  apply sm_mappend_valid; auto.
-Defined.
-
 Lemma sm_mappend_valid' tg xs1 l1 xs2 l2 xs' l' :
   List.Forall (isGoodIndex xs1 tg) l1 -> 
   List.Forall (isGoodIndex xs2 tg) l2 ->
@@ -726,7 +712,7 @@ Instance monoid_sm tg : Monoid (sm tg) :=
   assert (Vx : validSM tg (Sm tg xs xl)) by auto.
   assert (Vy : validSM tg (Sm tg ys yl)) by auto.
   assert (Vz : validSM tg (Sm tg zs zl)) by auto.
-  move: (sm_mappend_assoc tg (Sm tg xs xl) (Sm tg ys yl) (Sm tg zs zl) Vx Vy Vz) => Hyp.
+  move: (sm_mappend_assoc tg (Sm tg xs xl) (Sm tg ys yl) (Sm tg zs zl) Vy) => Hyp.
   inversion Hyp; subst; auto.
   apply proof_irrelevant_equality; auto.
 - (* id-left *)
@@ -740,12 +726,6 @@ Instance monoid_sm tg : Monoid (sm tg) :=
   rewrite newIsNullRight.
   rewrite !List.app_nil_r; auto.
 Defined.
-
-Instance chunkable_sm tg : ChunkableMonoid (sm tg) :=
-  { length xsm := 
-      let '(mk_sm x l H) := xsm in length x 
-  }.
-Admitted.
 
 Definition toSM (tg x: string) := Sm tg x (makeIndices x tg 0 (length x)).
 Hint Unfold toSM.
@@ -834,7 +814,6 @@ Instance monoid_morphism tg : MonoidMorphism (to_sm tg) :=
   ; morphism_mappend := to_sm_mappend tg
   }.
 
-Import Fuel.
 Definition toSMPar tg x i j := 
   match chunk (length x).+1 j x with
     | Some l => pmconcat (length (pmap (to_sm tg) l)).+1 i (pmap (to_sm tg) l)
@@ -851,3 +830,4 @@ Proof.
   unfold toSMPar.
   rewrite HC; auto.
 Qed.  
+

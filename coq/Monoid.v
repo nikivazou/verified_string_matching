@@ -249,16 +249,6 @@ Proof.
   congruence.
 Qed.
 
-(* Playing with non-option version. Not easy to reason about *)
-Definition chunk' {A : Type} `{M : ChunkableMonoid A} 
-        (i : nat) (x : A) (HI : i > 0) : list A.
-  destruct (chunk (length x).+1 i x) eqn:HC.
-  - exact l.
-  - exfalso. 
-    eapply chunk_res_not_none; eauto.
-Defined.
-Hint Unfold chunk'.
-
 Fixpoint mconcat {M: Type} `{Monoid M} (l: list M): M :=
   match l with
   | nil => ε
@@ -309,24 +299,19 @@ Qed.
 Axiom Strategy : Type.
 Axiom parStrategy : Strategy.
 Axiom withStrategy : forall {A},  Strategy -> A -> A.
-Axiom withStrategy_spec : forall {A} (s : Strategy) (x : A), 
-                            withStrategy s x = x.
+Axiom withStrategy_spec : forall {A} (s : Strategy) (x : A), withStrategy s x = x.
 
 Definition pmap {A B} (f : A -> B) (xs : seq A) := 
   withStrategy parStrategy (seq.map f xs).
 
-Lemma pmap_map : forall {A B} (f : A -> B) (xs : seq A),
-    pmap f xs = map f xs.
+Lemma pmap_map : forall {A B} (f : A -> B) (xs : seq A), pmap f xs = map f xs.
 Proof.
   intros. unfold pmap. rewrite withStrategy_spec. reflexivity.
 Qed.
 
-Section PMConcat.
-
-
 (* Similar treatment of PM Concat with Fuel *)
 (* Maybe there could be some automation here, since they are extremely similar *)
-Fixpoint pmconcat {A} `{_ : ChunkableMonoid A} 
+Fixpoint pmconcat {A} `{_ : Monoid A}
          (fuel : nat) i (xs : seq A) : option A :=
   match fuel with
     | O => None
@@ -339,11 +324,11 @@ Fixpoint pmconcat {A} `{_ : ChunkableMonoid A}
   end.
 
 Lemma pmconcat_fuel_lt : 
-  forall {A} `{_ : ChunkableMonoid A} n2 n1 i (xs : seq A),
+  forall {A} `{_ : Monoid A} n2 n1 i (xs : seq A),
     n1 < n2 -> 
     pmconcat n1 i xs = pmconcat n2 i xs \/ pmconcat n1 i xs = None.
 Proof.
-  move => A ? ? n2.
+  move => A ? n2.
   induction n2 => n1 i xs HN12.
   - inversion HN12.
   - unfold pmconcat.
@@ -360,11 +345,11 @@ Proof.
 Qed.
 
 Lemma pmconcat_fuel_length_sufficient :
-  forall {A} `{_ : ChunkableMonoid A} n i (xs : seq A),
+  forall {A} `{_ : Monoid A} n i (xs : seq A),
     length xs < n ->
     exists xs', pmconcat n i xs = Some xs'.
 Proof.
-  move => A ? ? n.
+  move => A ?  n.
   induction n=> i xs HLen.
   - inversion HLen.
   - destruct (pmconcat n.+1 i xs) eqn:PM; eauto.
@@ -389,7 +374,7 @@ Proof.
 Qed.
   
 Lemma pmconcat_fuel_monotonic :
-  forall {A} `{_ : ChunkableMonoid A} n2 n1 i (xs : seq A),
+  forall {A} `{_ : Monoid A} n2 n1 i (xs : seq A),
     n1 < n2 -> length xs < n1 ->
     pmconcat n1 i xs = pmconcat n2 i xs.
 Proof.
@@ -400,7 +385,7 @@ Proof.
 Qed.
 
 Lemma pmconcat_fuel_monotonic' :
-  forall {A} `{_ : ChunkableMonoid A} n2 n1 i (xs : seq A),
+  forall {A} `{_ : Monoid A} n2 n1 i (xs : seq A),
     n1 <= n2 -> length xs < n1 ->
     pmconcat n1 i xs = pmconcat n2 i xs.
 Proof.
@@ -411,15 +396,13 @@ Proof.
 Qed.
 
 Corollary pmconcat_len_spec : 
-  forall {A} `{ChunkableMonoid A} i (xs : seq A), 
+  forall {A} `{Monoid A} i (xs : seq A), 
     exists l, pmconcat (length xs).+1 i xs = Some l.
 Proof.
   intros; eapply pmconcat_fuel_length_sufficient; eauto.
 Qed.
 
-End PMConcat.
-
-Lemma mconcat_split {A} `{_ : ChunkableMonoid A} (xs : seq A):
+Lemma mconcat_split {A} `{_ : Monoid A} (xs : seq A):
   forall (i : nat), i <= length xs -> 
   mconcat xs = mconcat (seq.take i xs) ◇ mconcat (seq.drop i xs).
 Proof.
@@ -431,7 +414,7 @@ Proof.
       rewrite -IHxs; auto.
 Qed.
 
-Lemma mconcat_chunk {A} `{_ : ChunkableMonoid A} (xs : seq A) :
+Lemma mconcat_chunk {A} `{_ : Monoid A} (xs : seq A) :
   forall (i : nat), i > 0 ->
     exists l, chunk (length xs).+1 i xs = Some l /\ 
               mconcat xs = mconcat (map mconcat l).
@@ -443,7 +426,7 @@ Proof.
   rewrite HC.
   exists l; split; auto.
   unfold chunk in HC.
-  fold chunk. (* This should do the following rewrite, but whatever *)
+  (* fold chunk in *. *) (* This should do the following rewrite, but whatever *)
   (* I don't know what the hell went wrong here *)
   assert (WTF: (fix
             chunk (A : Type) (H : Monoid A) (M : ChunkableMonoid A)
@@ -469,11 +452,11 @@ Proof.
     inversion HC; subst; auto.
     assert (HIX: i <= length x)
       by (destruct (i <= length x) eqn:HIX; try ssromega; auto).
-    specialize (H1 (drop i x)).
+    specialize (H0 (drop i x)).
     assert (HI' : length x - i < length x)
       by (apply /ltP; apply PeanoNat.Nat.sub_lt; try ssromega;
           apply /leP; auto).
-    destruct H1 as [l' [HCD HL']].
+    destruct H0 as [l' [HCD HL']].
     + unfold lt_len.
       rewrite drop_spec; auto.
     + pose proof (chunk_fuel_monotonic' (length x)
@@ -483,10 +466,10 @@ Proof.
       * rewrite HC' in HCD.
         inversion HCD; subst; simpl; auto.
         rewrite -HL'. apply mconcat_split; auto.
-      * rewrite drop_spec; auto.
+      * rewrite drop_spec; eauto.
 Qed.
 
-Theorem pmconcat_equivalence {A} `{_ : ChunkableMonoid A} i (xs : seq A) :
+Theorem pmconcat_equivalence {A} `{_ : Monoid A} i (xs : seq A) :
   exists l, pmconcat (length xs).+1 i xs = Some l /\ l = mconcat xs.
 Proof. 
   pose proof (pmconcat_len_spec i xs) as Hyp.
@@ -506,8 +489,8 @@ Proof.
   rewrite HC in HC'. inversion HC'; subst.
   rewrite HL'.
   
-  specialize (H1 (pmap mconcat l1)).
-  rewrite pmap_map in H1.
+  specialize (H0 (pmap mconcat l1)).
+  rewrite pmap_map in H0.
 
   assert (Lens: (length [seq mconcat i | i <- l1]).+1 <= length x).
   { 
@@ -519,7 +502,7 @@ Proof.
     destruct (i == 1) eqn:I1; simpl in *; try ssromega.
   }
 
-  rewrite -H1; auto.
+  rewrite -H0; auto.
   rewrite pmap_map in HL.
   
   pose proof (pmconcat_fuel_monotonic' (length x) 
@@ -530,7 +513,7 @@ Qed.
 
 Theorem parallelization_correct {N M} (f : N -> M) 
         `{MN : Monoid N} `{MM : Monoid M}
-        `{CN : @ChunkableMonoid N MN} `{CM : @ChunkableMonoid M MM}
+        `{CN : @ChunkableMonoid N MN} 
         `{Mf : @MonoidMorphism N M MN MM f} (x : N) (i j : nat):
   i > 0 -> j > 0 -> 
   exists l, chunk (length x).+1 j x = Some l /\ 
@@ -554,7 +537,7 @@ Qed.
 (* Final theorem :) *)
 Corollary parallelization_correct' {N M} (f : N -> M) 
         `{MN : Monoid N} `{MM : Monoid M}
-        `{CN : @ChunkableMonoid N MN} `{CM : @ChunkableMonoid M MM}
+        `{CN : @ChunkableMonoid N MN} 
         `{Mf : @MonoidMorphism N M MN MM f} (x : N) (i j : nat) l:
   i > 0 -> j > 0 -> 
   chunk (length x).+1 j x = Some l ->
