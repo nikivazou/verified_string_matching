@@ -1,6 +1,6 @@
 #define IncludedmapShiftZero
 
-mapShiftZero :: RString -> RString -> List Int -> Proof
+mapShiftZero :: RString -> RString -> List Integer -> Proof
 {-@ mapShiftZero :: target:RString -> i:RString -> is:List (GoodIndex i target) 
   -> {map (shiftStringRight target stringEmp i) is == is } 
   / [llen is] @-}

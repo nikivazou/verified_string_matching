@@ -1,15 +1,15 @@
 #define IncludedshiftIndicesRight
 
 {-@ shiftIndicesRight
-  :: lo:Nat 
-  -> hi:Int  
+  :: lo:INat 
+  -> hi:Integer  
   -> x:RString 
   -> input:RString 
   -> target:RString
   -> { map (shiftStringRight target x input) (makeIndices input target lo hi) == makeIndices (x <+> input) target (stringLen x + lo) (stringLen x + hi) }
   / [if hi < lo then 0 else  hi-lo]
   @-}
-shiftIndicesRight :: Int -> Int -> RString -> RString -> RString -> Proof
+shiftIndicesRight :: Integer -> Integer -> RString -> RString -> RString -> Proof
 shiftIndicesRight lo hi x input target
   | hi < lo 
   =   map (shiftStringRight target x input) (makeIndices input target lo hi)
@@ -59,10 +59,10 @@ shiftIndicesRight lo hi x input target
 
 
 {-@ isGoodIxConcatFront 
-  :: input:RString -> input':RString -> tg:RString -> i:Nat
+  :: input:RString -> input':RString -> tg:RString -> i:INat
   -> {(isGoodIndex input tg i) <=> (isGoodIndex (input' <+> input) tg (stringLen input' + i)) 
      } @-}
-isGoodIxConcatFront :: RString -> RString -> RString -> Int -> Proof 
+isGoodIxConcatFront :: RString -> RString -> RString -> Integer -> Proof 
 isGoodIxConcatFront input input' tg i 
   =   isGoodIndex input tg i 
   ==. (subString input i (stringLen tg)  == tg  

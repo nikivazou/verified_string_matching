@@ -4,7 +4,7 @@
      :: f:(RString -> Monoid a)
      -> thm:(x1:RString -> x2:RString -> {f (x1 <+> x2) ==  (f x1) <> (f x2)} )
      -> is:RString
-     -> n:Int 
+     -> n:Integer 
      -> {f is == mconcat (map f (chunkString n is))}
      / [stringLen is] 
   @-}
@@ -12,7 +12,7 @@
 distributeInput :: forall (a :: Symbol). (KnownSymbol a) 
   => (RString -> Monoid a)
   -> (RString -> RString -> Proof)
-  -> RString -> Int -> Proof
+  -> RString -> Integer -> Proof
 
 distributeInput f thm is n  
   | stringLen is <= n || n <= 1

@@ -10,7 +10,7 @@
 
 data SM (target :: Symbol) where 
   SM :: RString       -- | input string
-     -> (List Int)    -- | valid indices of target in input
+     -> (List Integer)    -- | valid indices of target in input
      -> SM target
   deriving (Show)
 
@@ -20,11 +20,11 @@ data SM (target :: Symbol) where
        } @-}
 
 {-@ type GoodIndex Input Target 
-  = {i:Int | IsGoodIndex Input Target i }
+  = {i:Integer | IsGoodIndex Input Target i }
   @-}
 
 {-@ type GoodIndexTwo Input X Target 
-  = {i:Int | (IsGoodIndex Input Target i) && (IsGoodIndex (Input <+> X) Target i) }
+  = {i:Integer | (IsGoodIndex Input Target i) && (IsGoodIndex (Input <+> X) Target i) }
   @-}
 
 
@@ -54,7 +54,7 @@ toSM input = SM input (makeSMIndices input tg)
 
 {-@ axiomatize makeSMIndices @-}
 {-@ makeSMIndices :: input:RString -> target:RString -> List (GoodIndex input target) @-}
-makeSMIndices :: RString -> RString -> List Int 
+makeSMIndices :: RString -> RString -> List Integer 
 makeSMIndices input target = makeIndices input target  0 (stringLen input - 1)
 
 -------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ mempty = SM stringEmp N
 
 {-@ reflect makeNewIndices @-}
 {-@ makeNewIndices :: s1:RString -> s2:RString -> target:RString -> List (GoodIndex { s1 <+> s2} target) @-}
-makeNewIndices :: RString -> RString -> RString -> List Int 
+makeNewIndices :: RString -> RString -> RString -> List Integer 
 makeNewIndices s1 s2 target
   | stringLen target < 2 
   = N
@@ -89,23 +89,23 @@ makeNewIndices s1 s2 target
                 (stringLen s1 - 1)
 
 {-@ reflect maxInt @-}
-maxInt :: Int -> Int -> Int 
+maxInt :: Integer -> Integer -> Integer 
 maxInt x y = if x <= y then y else x 
 
 {-@ reflect shift @-}
-shift :: Int -> Int -> Int 
+shift :: Integer -> Integer -> Integer 
 shift x y = x + y 
 
 -- | Helpers 
 {-@ reflect shiftStringRight @-}
-shiftStringRight :: RString -> RString -> RString -> Int -> Int 
+shiftStringRight :: RString -> RString -> RString -> Integer -> Integer 
 {-@ shiftStringRight :: target:RString -> left:RString -> right:RString -> i:GoodIndex right target 
   -> {v:(GoodIndex {left <+> right} target) | v == i + stringLen left } @-}
 shiftStringRight target left right i 
   = cast (subStringConcatFront right left (stringLen target) i) (shift (stringLen left) i)
 
 {-@ reflect castGoodIndexRight @-}
-castGoodIndexRight :: RString -> RString -> RString -> Int -> Int  
+castGoodIndexRight :: RString -> RString -> RString -> Integer -> Integer  
 {-@ castGoodIndexRight :: target:RString -> input:RString -> x:RString -> i:GoodIndex input target 
    -> {v:(GoodIndexTwo input x target)| v == i} @-}
 castGoodIndexRight target input x i  = cast (subStringConcatBack input x (stringLen target) i) i
@@ -116,8 +116,8 @@ castGoodIndexRight target input x i  = cast (subStringConcatBack input x (string
 -------------------------------------------------------------------------------
 
 {-@ reflect makeIndices @-}
-makeIndices :: RString -> RString -> Int -> Int -> List Int 
-{-@ makeIndices :: input:RString -> target:RString -> lo:Nat -> hi:Int -> List (GoodIndex input target) 
+makeIndices :: RString -> RString -> Integer -> Integer -> List Integer
+{-@ makeIndices :: input:RString -> target:RString -> lo:{v:Integer | 0 <= v} -> hi:Integer -> List (GoodIndex input target) 
   / [hi - lo + 1] @-}
 makeIndices input target lo hi 
   | hi < lo 
@@ -133,8 +133,8 @@ makeIndices input target lo hi
 
 
 {-@ reflect isGoodIndex @-}
-isGoodIndex :: RString -> RString -> Int -> Bool 
-{-@ isGoodIndex :: input:RString -> target:RString -> i:Int 
+isGoodIndex :: RString -> RString -> Integer -> Bool 
+{-@ isGoodIndex :: input:RString -> target:RString -> i:Integer 
   -> {b:Bool | b <=> IsGoodIndex input target i} @-}
 isGoodIndex input target i 
   =  subString input i (stringLen target)  == target  

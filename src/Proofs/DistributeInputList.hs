@@ -35,8 +35,8 @@ import RString.RString
 #include "DistributeInput.hs"
 
 
-{-@ distributionEq :: _ -> is:RString -> n:Int -> {toMonoid is == mconcat (map toMonoid (chunkString n is))} @-}
-distributionEq :: forall (a :: Symbol). (KnownSymbol a) => Monoid a -> RString -> Int -> Proof
+{-@ distributionEq :: _ -> is:RString -> n:Integer -> {toMonoid is == mconcat (map toMonoid (chunkString n is))} @-}
+distributionEq :: forall (a :: Symbol). (KnownSymbol a) => Monoid a -> RString -> Integer -> Proof
 distributionEq _ is n = distributeInput (toMonoid :: RString -> Monoid a) (distributestoMonoid (mempty :: Monoid a)) is n 
 
 {-@ reflect toMonoid @-}

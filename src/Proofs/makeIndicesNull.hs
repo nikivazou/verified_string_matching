@@ -1,11 +1,11 @@
 #define IncludedmakeIndicesNull
 
-makeIndicesNull :: RString -> RString -> Int -> Int -> Proof 
+makeIndicesNull :: RString -> RString -> Integer -> Integer -> Proof 
 {-@ makeIndicesNull 
   :: s:RString 
   -> t:RString
-  -> lo:Nat 
-  -> hi:{Int | (stringLen t < 2 + stringLen s && 1 + stringLen s - stringLen t <= lo && lo <= hi)
+  -> lo:INat 
+  -> hi:{Integer | (stringLen t < 2 + stringLen s && 1 + stringLen s - stringLen t <= lo && lo <= hi)
              || (1 + stringLen s <= stringLen t)
              || (stringLen s < lo + stringLen t)
              || (stringLen s < stringLen t)}

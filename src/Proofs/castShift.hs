@@ -1,6 +1,6 @@
 #define IncludedcastShift
 
-castShift :: RString -> RString -> RString -> RString -> List Int -> Proof
+castShift :: RString -> RString -> RString -> RString -> List Integer -> Proof
 {-@ castShift :: tg:RString -> xi:RString -> yi:RString -> zi:RString 
              ->  yis:List (GoodIndex yi tg) 
         -> {map (castGoodIndexRight tg (xi <+> yi) zi) (map (shiftStringRight tg xi yi) yis) == map (shiftStringRight tg xi (yi <+> zi)) (map (castGoodIndexRight tg yi zi) yis)} @-}
@@ -14,7 +14,7 @@ castShift tg xi yi zi yis
 
 {-@ mapShiftIndex :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> xs:List (GoodIndex yi tg)
   -> {map (shiftStringRight tg xi yi) xs == map (shiftStringRight tg xi (yi <+> zi)) xs} / [llen xs] @-}
-mapShiftIndex :: RString -> RString -> RString -> RString -> List Int -> Proof
+mapShiftIndex :: RString -> RString -> RString -> RString -> List Integer -> Proof
 mapShiftIndex tg xi yi zi N 
   = map (shiftStringRight tg xi yi) N ==. N ==. map (shiftStringRight tg xi (yi <+> zi)) N *** QED 
   *** QED 

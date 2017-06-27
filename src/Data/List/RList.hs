@@ -28,8 +28,8 @@ instance Show a => Show (List a) where
       go (C x xs) = show x ++ ", " ++ go xs  
 
 {-@ measure llen @-}
-{-@ llen :: List a -> Nat @-} 
-llen :: List a -> Int 
+{-@ llen :: List a -> {v:Integer | 0 <= v } @-} 
+llen :: List a -> Integer 
 llen N        = 0 
 llen (C _ xs) = 1 + llen xs 
 
@@ -44,11 +44,12 @@ append :: List a -> List a -> List a
 append N        ys = ys 
 append (C x xs) ys = x `C` (append xs ys)
 
-{-@ type Pos = {v:Int | 0 < v } @-}
+{-@ type Pos  = {v:Integer | 0 < v } @-}
+{-@ type INat = {v:Integer | 0 <= v } @-}
 
 {-@ reflect chunk @-}
 {-@ chunk :: i:Pos -> xs:List a -> {v:List (List a) | if (llen xs <= i) then (llen v == 1) else (if (i == 1) then (llen v == llen xs) else (llen v < llen xs)) } / [llen xs] @-}
-chunk :: Int -> List a -> List (List a)
+chunk :: Integer -> List a -> List (List a)
 chunk i xs 
   | llen xs <= i 
   = C xs N 
@@ -56,8 +57,8 @@ chunk i xs
   = C (take i xs) (chunk i (drop i xs))
 
 {-@ axiomatize drop @-}
-{-@ drop :: i:Nat -> xs:{List a | i <= llen xs } -> {v:List a | llen v == llen xs - i } @-} 
-drop :: Int -> List a -> List a 
+{-@ drop :: i:INat -> xs:{List a | i <= llen xs } -> {v:List a | llen v == llen xs - i } @-} 
+drop :: Integer -> List a -> List a 
 drop i N = N 
 drop i (C x xs)
   | i == 0 
@@ -66,8 +67,8 @@ drop i (C x xs)
   = drop (i-1) xs 
 
 {-@ axiomatize take @-}
-{-@ take :: i:Nat -> xs:{List a | i <= llen xs } -> {v:List a | llen v == i} @-} 
-take :: Int -> List a -> List a 
+{-@ take :: i:INat -> xs:{List a | i <= llen xs } -> {v:List a | llen v == i} @-} 
+take :: Integer -> List a -> List a 
 take i N = N 
 take i (C x xs)
   | i == 0 

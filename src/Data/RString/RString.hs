@@ -11,10 +11,10 @@ import qualified Data.String     as ST
 import Language.Haskell.Liquid.ProofCombinators 
 
 
-{-@ embed RString as Str @-}
+{-@ embed Data.ByteString.Internal.ByteString as Str @-}
 
-data RString = S BS.ByteString 
-  deriving (Eq, Show)
+type RString = BS.ByteString 
+--   deriving (Eq, Show)
 
 ------------------------------------------------------------------------------
 ---------------  RString Interface in Logic --------------------------------
@@ -42,35 +42,42 @@ data RString = S BS.ByteString
 {-@ assume (<+>) :: x:RString -> y:RString 
                  -> {v:RString | v == x <+> y && stringLen v == stringLen x + stringLen y } @-}
 (<+>) :: RString -> RString -> RString
-(<+>) (S s1) (S s2) = S (s1 `BS.append` s2)
+(<+>) (s1) (s2) = (s1 `BS.append` s2)
 
 {-@ assume stringEmp :: {v:RString | v == stringEmp  && stringLen v == 0 } @-}
 stringEmp :: RString
-stringEmp = S (BS.empty)
+stringEmp = (BS.empty)
 
-stringLen :: RString -> Int  
-{-@ assume stringLen :: x:RString -> {v:Nat | v == stringLen x} @-}
-stringLen (S s) = BS.length s 
+stringLen :: RString -> Integer   
+{-@ assume stringLen :: x:RString -> {v:INat | v == stringLen x} @-}
+stringLen s = toInteger (BS.length s)
 
-{-@ assume subString  :: s:RString -> offset:Int -> ln:Int -> {v:RString | v == subString s offset ln } @-}
-subString :: RString -> Int -> Int -> RString 
-subString (S s) o l = S (BS.take l $ BS.drop o s) 
+{-@ assume subString  :: s:RString -> offset:Integer -> ln:Integer -> {v:RString | v == subString s offset ln } @-}
+subString :: RString -> Integer -> Integer -> RString 
+subString (s) o l =  (BS.take l' $ BS.drop o' s)
+  where
+    l' = fromInteger l 
+    o' = fromInteger o  
 
-{-@ assume takeString :: i:Nat -> xs:{RString | i <= stringLen xs } -> {v:RString | stringLen v == i && v == takeString i xs } @-} 
-takeString :: Int -> RString -> RString
-takeString i (S s) = S (BS.take i s)
+{-@ assume takeString :: i:INat -> xs:{RString | i <= stringLen xs } -> {v:RString | stringLen v == i && v == takeString i xs } @-} 
+takeString :: Integer -> RString -> RString
+takeString i s = BS.take i' s
+  where
+    i' = fromInteger i 
 
-{-@ assume dropString :: i:Nat -> xs:{RString | i <= stringLen xs } -> {v:RString | stringLen v == stringLen xs - i && v == dropString i xs } @-} 
-dropString :: Int -> RString -> RString
-dropString i (S s) = S (BS.drop i s)
+{-@ assume dropString :: i:INat -> xs:{RString | i <= stringLen xs } -> {v:RString | stringLen v == stringLen xs - i && v == dropString i xs } @-} 
+dropString :: Integer -> RString -> RString
+dropString i s = BS.drop i' s
+  where
+    i' = fromInteger i 
 
 {-@ assume fromString :: i:String -> {o:RString | i == o && o == fromString i} @-}
 fromString :: String -> RString
-fromString = S . ST.fromString 
+fromString =  ST.fromString 
 
 {-@ assume isNullString :: i:RString -> {b:Bool | Prop b <=> stringLen i == 0 } @-} 
 isNullString :: RString -> Bool 
-isNullString (S s) = BS.length s == 0 
+isNullString s = BS.length s == 0 
 
 
 ------------------------------------------------------------------------------
@@ -131,9 +138,9 @@ concatEmpRight xi yi
 
 -- | Concat
 
-{-@ assume concatTakeDrop :: i:Nat -> xs:{RString | i <= stringLen xs} 
+{-@ assume concatTakeDrop :: i:INat -> xs:{RString | i <= stringLen xs} 
     -> {xs == (takeString i xs) <+> (dropString i xs) }  @-}
-concatTakeDrop :: Int -> RString -> Proof 
+concatTakeDrop :: Integer -> RString -> Proof 
 concatTakeDrop _ _ = trivial
 
 concatLen :: RString -> RString -> Proof
@@ -148,18 +155,18 @@ concatStringAssoc _ _ _ = trivial
 
 -- | Substrings 
 
-{-@ assume subStringConcatBack :: input:RString -> input':RString -> j:Int -> i:{Int | i + j <= stringLen input }
+{-@ assume subStringConcatBack :: input:RString -> input':RString -> j:Integer -> i:{Integer | i + j <= stringLen input }
   -> { (subString input i j == subString (input <+> input') i j) 
     && (stringLen input <= stringLen (input <+> input'))
      } @-}
-subStringConcatBack :: RString -> RString -> Int -> Int -> Proof 
+subStringConcatBack :: RString -> RString -> Integer -> Integer -> Proof 
 subStringConcatBack _ _ _ _ = trivial  
 
 
 {-@ assume subStringConcatFront  
-  :: input:RString -> input':RString -> j:Int -> i:Int 
+  :: input:RString -> input':RString -> j:Integer -> i:Integer 
   -> { (subString input i j == subString (input' <+> input) (stringLen input' + i) j)
       && (stringLen (input' <+> input) == stringLen input + stringLen input')
     } @-}
-subStringConcatFront :: RString -> RString -> Int -> Int -> Proof
+subStringConcatFront :: RString -> RString -> Integer -> Integer -> Proof
 subStringConcatFront _ _ _ _ = trivial

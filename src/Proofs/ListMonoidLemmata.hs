@@ -70,9 +70,9 @@ listAssoc (C x xs) y z
 
 
 {-@ listTakeDrop :: 
-  i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  
+  i:{Integer | 0 <= i} -> xs:{List a | i <= llen xs}  
   -> {xs == append (take i xs) (drop i xs)} / [llen xs] @-}
-listTakeDrop :: Int -> List a -> Proof 
+listTakeDrop :: Integer -> List a -> Proof 
 listTakeDrop i N
   =   append (take i N) (drop i N)
   ==. append N N 

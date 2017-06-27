@@ -155,8 +155,8 @@ mappend_assoc x@(SM xi xis) y@(SM yi yis) z@(SM zi zis)
 {-@ inline makeIs4left @-}
 
 makeIs2left tg xi yi zi = makeNewIndices xi (yi <+> zi) tg
-{-@ makeIs3left :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> List (GoodIndex yi tg) -> List Int @-} 
-makeIs3left :: RString -> RString -> RString -> RString -> List Int -> List Int 
+{-@ makeIs3left :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> List (GoodIndex yi tg) -> List Integer @-} 
+makeIs3left :: RString -> RString -> RString -> RString -> List Integer -> List Integer 
 makeIs3left tg xi yi zi yis   
   = map (shiftStringRight tg xi (yi <+> zi)) (map (castGoodIndexRight tg yi zi) yis)
 makeIs4left tg xi yi zi     
@@ -166,14 +166,15 @@ makeIs4left tg xi yi zi
 {-@ inline makeIs4right @-}
 {-@ inline makeIs2right @-}
 makeIs2right tg xi yi zi = map (castGoodIndexRight tg (xi <+> yi) zi) (makeNewIndices xi yi tg) 
-{-@ makeIs3right :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> List (GoodIndex yi tg) -> List Int @-} 
+{-@ makeIs3right :: tg:RString -> xi:RString -> yi:RString -> zi:RString -> List (GoodIndex yi tg) -> List Integer @-} 
+makeIs3right :: RString -> RString -> RString -> RString -> List Integer -> List Integer 
 makeIs3right tg xi yi zi yis   
   = map (castGoodIndexRight tg (xi <+> yi) zi) (map (shiftStringRight tg xi yi) yis)
 makeIs4right tg xi yi zi     
   = makeNewIndices (xi <+> yi) zi tg
 
 assocNewIndices :: forall (target :: Symbol). (KnownSymbol target) => 
-  SM target -> RString -> RString -> RString -> RString -> List Int -> Proof
+  SM target -> RString -> RString -> RString -> RString -> List Integer -> Proof
 {-@ assocNewIndices :: y:SM target -> tg:{RString | tg == target} -> xi:RString 
    -> yi:{RString | yi == inputSM y} 
    -> zi:RString 
