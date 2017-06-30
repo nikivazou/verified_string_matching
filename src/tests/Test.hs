@@ -47,7 +47,7 @@ testRunTimeOnTarget fn target = do
   printSummary 5 (fst t) (t:ts)
   putStrLn "\n\n"
 
-printSummary :: Int -> Double -> [(Double, (Int, Int))] -> IO ()
+printSummary :: Int -> Double -> [(Double, (Integer, Integer))] -> IO ()
 printSummary cut tseq ts = do  
   let sortedts = take cut (sort ts)
   putStrLn $ "\nBest " ++ show cut ++ " speedups:"
@@ -69,7 +69,7 @@ showSpeedup tseq tpar
   where
     mspace = if tseq >= tpar then " " else ""
 
-doSeqStringMatch :: String -> Maybe Int -> Target -> IO (Double, (Int, Int))
+doSeqStringMatch :: String -> Maybe Int -> Target -> IO (Double, (Integer, Integer))
 doSeqStringMatch fn insize tg = do 
   input     <- makeInput insize <$> readFile "src/tests/wilde-picture.txt"
   let target = makeTarget input tg 
@@ -81,12 +81,12 @@ doSeqStringMatch fn insize tg = do
      show $ length input, show $ length target, show $ is]
   return (sec, (1, 1))
 
-doParStringMatch :: String -> Double -> Int -> Int -> Maybe Int -> Target -> IO (Double, (Int, Int))
+doParStringMatch :: String -> Double -> Integer -> Integer -> Maybe Int -> Target -> IO (Double, (Integer, Integer))
 
 doParStringMatch fn seqspeed parfactor chunksize insize tg = do 
   input     <- makeInput insize <$> readFile "src/tests/wilde-picture.txt"
   let target = makeTarget input tg 
-  (is, sec) <- computeTime itenumber (timeParStringMatching parfactor (length input `div` chunksize) input target)
+  (is, sec) <- computeTime itenumber (timeParStringMatching parfactor (toInteger (length input `div` fromIntegral chunksize)) input target)
   write fn doubletabsep 
     [show parfactor, show chunksize, 
      showDouble sec, showSpeedup seqspeed sec,
@@ -95,8 +95,8 @@ doParStringMatch fn seqspeed parfactor chunksize insize tg = do
 
 
 
-computeTime :: Int -> IO (a, Double) -> IO (a, Double)
-computeTime i act = go i undefined 0 
+computeTime :: Integer -> IO (a, Double) -> IO (a, Double)
+computeTime i act = go (fromIntegral i) undefined 0 
   where
     go 0 x acc = return (x, acc / (fromIntegral i ::Double))
     go i _ acc = do {(x, t) <- act; go (i-1) x (acc +t)}

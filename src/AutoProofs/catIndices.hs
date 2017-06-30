@@ -17,12 +17,12 @@
 
 {-@ automatic-instances catIndices @-}
 
-catIndices :: RString -> RString -> RString -> Int -> Int -> Proof 
+catIndices :: RString -> RString -> RString -> Integer -> Integer -> Proof 
 {-@ catIndices 
      :: input:RString -> x:RString 
      -> target:{RString | 0 <= stringLen input - stringLen target + 1} 
-     -> lo:{Nat | lo <= stringLen input - stringLen target } 
-     -> hi:{Int | (stringLen input - stringLen target) <= hi}
+     -> lo:{INat | lo <= stringLen input - stringLen target } 
+     -> hi:{Integer | (stringLen input - stringLen target) <= hi}
      -> { makeIndices input target lo hi == makeIndices (input <+> x) target lo (stringLen input - stringLen target) }
   @-}
 catIndices input x target lo hi 

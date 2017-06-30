@@ -61,13 +61,13 @@ IncludeddistributeInput
 {-@ parallelismEquivalence :: 
       f:(RString -> Monoid target) 
    -> (x1:RString -> x2:RString -> {f (x1 <+> x2) ==  (f x1) <> (f x2)})
-   -> is:RString  -> n:Int -> m:Int
+   -> is:RString  -> n:Integer -> m:Integer
    -> {f is == pmconcat m (map f (chunkString n is)) } @-}
 
 parallelismEquivalence :: forall (target :: Symbol). (KnownSymbol target) 
   => (RString -> Monoid target)
   -> (RString -> RString -> Proof) 
-  -> RString -> Int -> Int -> Proof
+  -> RString -> Integer -> Integer -> Proof
 parallelismEquivalence f thm is n m  
   =   pmconcatEquivalence m (map f (chunkString n is) :: List (Monoid target))
   &&& distributeInput f thm is n 
@@ -76,8 +76,8 @@ parallelismEquivalence f thm is n m
 
 {-@ automatic-instances pmconcatEquivalence   @-}
 
-pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof
-{-@ pmconcatEquivalence :: i:Int -> is:List (Monoid a) -> {pmconcat i is == mconcat is} / [llen is] @-}
+pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Integer -> List (Monoid a) -> Proof
+{-@ pmconcatEquivalence :: i:Integer -> is:List (Monoid a) -> {pmconcat i is == mconcat is} / [llen is] @-}
 pmconcatEquivalence i is 
   | i <= 1 || llen is <= i 
   = trivial  
@@ -98,8 +98,8 @@ NV: Note the unfolding here required becuase of the complicated SM type
 It is not required when I run only this file and not the SM 
 -}
 
-mconcatSplit :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof 
-{-@ mconcatSplit :: i:Nat -> xs:{List (Monoid a) | i <= llen xs} 
+mconcatSplit :: forall (a :: Symbol). (KnownSymbol a) => Integer -> List (Monoid a) -> Proof 
+{-@ mconcatSplit :: i:INat -> xs:{List (Monoid a) | i <= llen xs} 
      -> { mconcat xs ==  mconcat (take i xs) <> mconcat (drop i xs)}
      / [i]
   @-} 
@@ -115,7 +115,7 @@ mconcatSplit i (C x xs)
 -- Generalization to chunking  
 
 {-@ automatic-instances mconcatChunk @-}
-mconcatChunk :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof 
+mconcatChunk :: forall (a :: Symbol). (KnownSymbol a) => Integer -> List (Monoid a) -> Proof 
 {-@ mconcatChunk :: i:Pos -> xs:List (Monoid a) 
   -> { mconcat xs == mconcat (map mconcat (chunk i xs))}
   /  [llen xs] @-}
@@ -128,7 +128,7 @@ mconcatChunk i xs
 
 
 #else
-pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Int -> List (Monoid a) -> Proof
+pmconcatEquivalence :: forall (a :: Symbol). (KnownSymbol a) => Integer -> List (Monoid a) -> Proof
 {-@ pmconcatEquivalence :: i:Int -> is:List (Monoid a) -> {pmconcat i is == mconcat is} / [llen is] @-}
 pmconcatEquivalence _ _ = trivial     
 #endif

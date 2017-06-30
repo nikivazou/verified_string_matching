@@ -59,8 +59,8 @@ listAssoc (C _ x) y z = listAssoc x y z
 
 {-@ automatic-instances listTakeDrop   @-}
 
-{-@ listTakeDrop :: i:{Int | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} @-}
-listTakeDrop :: Int -> List a -> Proof 
+{-@ listTakeDrop :: i:{Integer | 0 <= i} -> xs:{List a | i <= llen xs}  -> {xs == append (take i xs) (drop i xs)} @-}
+listTakeDrop :: Integer -> List a -> Proof 
 listTakeDrop i N           
   = trivial
 listTakeDrop i (C x xs) 

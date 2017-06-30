@@ -2,9 +2,9 @@
 
 {-@ automatic-instances mergeIndices @-}
 
-mergeIndices :: RString -> RString -> Int -> Int -> Int -> Proof
+mergeIndices :: RString -> RString -> Integer -> Integer -> Integer -> Proof
 {-@ mergeIndices 
-  :: input:RString -> target:RString -> lo:Nat -> mid:{Int | lo <= mid} -> hi:{Int | mid <= hi} 
+  :: input:RString -> target:RString -> lo:INat -> mid:{Integer | lo <= mid} -> hi:{Integer | mid <= hi} 
   -> {makeIndices input target lo hi == append (makeIndices input target lo mid) (makeIndices input target (mid+1) hi)} 
   / [mid] @-}
 mergeIndices input target lo mid hi 
@@ -24,9 +24,9 @@ mergeIndices input target lo mid hi
 {-@ automatic-instances makeNewIndicesBadLast  @-}
 
 makeNewIndicesGoodLast, makeNewIndicesBadLast 
-  :: RString -> RString -> Int -> Int -> Proof 
+  :: RString -> RString -> Integer -> Integer -> Proof 
 {-@ makeNewIndicesGoodLast 
-  :: input:RString -> target:RString -> lo:Nat -> hi:{Int | lo <= hi && (isGoodIndex input target hi)}
+  :: input:RString -> target:RString -> lo:INat -> hi:{Integer | lo <= hi && (isGoodIndex input target hi)}
   -> {makeIndices input target lo hi == append (makeIndices input target lo (hi-1)) (C hi N)}
   / [hi - lo] @-}
 makeNewIndicesGoodLast input target lo hi 
@@ -39,7 +39,7 @@ makeNewIndicesGoodLast input target lo hi
   
 
 {-@ makeNewIndicesBadLast 
-  :: input:RString -> target:RString -> lo:Nat -> hi:{Int | lo <= hi && (not (isGoodIndex input target hi))}
+  :: input:RString -> target:RString -> lo:INat -> hi:{Integer | lo <= hi && (not (isGoodIndex input target hi))}
   -> {makeIndices input target lo hi == makeIndices input target lo (hi-1)}
   / [hi - lo + 1]
 @-}

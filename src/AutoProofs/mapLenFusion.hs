@@ -2,7 +2,7 @@
 
 {-@ automatic-instances mapLenFusion @-}
 
-mapLenFusion :: RString -> RString -> RString -> RString -> List Int -> Proof
+mapLenFusion :: RString -> RString -> RString -> RString -> List Integer -> Proof
 {-@ mapLenFusion :: tg:RString -> xi:RString -> yi:RString -> zi:RString 
             -> zis:List (GoodIndex zi tg) 
         -> {map (shiftStringRight tg xi (yi <+> zi)) (map (shiftStringRight tg yi zi) zis) == map (shiftStringRight tg (xi <+> yi) zi) zis} 

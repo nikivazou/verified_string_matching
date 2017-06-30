@@ -3,13 +3,13 @@
 {-@ automatic-instances concatMakeIndices @-}
 
 {-@ concatMakeIndices
-  :: lo:Nat -> hi:Int
+  :: lo:INat -> hi:Integer
   -> target: RString
   -> input : {RString | hi + stringLen target <= stringLen input } 
   -> input': RString   
   -> { makeIndices (input <+> input') target lo hi == makeIndices input target lo hi }
   / [hi - lo]  @-}
-concatMakeIndices :: Int -> Int -> RString -> RString -> RString  -> Proof
+concatMakeIndices :: Integer -> Integer -> RString -> RString -> RString  -> Proof
 concatMakeIndices lo hi target input input'
   | hi < lo 
   =  trivial 
@@ -34,10 +34,10 @@ concatMakeIndices lo hi target input input'
 {- FAILS  automatic-instances isGoodIxConcatBack @-}
 
 {-@ isGoodIxConcatBack 
-  :: input:RString -> input':RString -> tg:RString -> i:{Int | i + stringLen tg <= stringLen input }
+  :: input:RString -> input':RString -> tg:RString -> i:{Integer | i + stringLen tg <= stringLen input }
   -> {((isGoodIndex input tg i) <=> isGoodIndex (input <+> input') tg i)
      } @-}
-isGoodIxConcatBack :: RString -> RString -> RString -> Int -> Proof 
+isGoodIxConcatBack :: RString -> RString -> RString -> Integer -> Proof 
 isGoodIxConcatBack input input' tg i 
   =   isGoodIndex input tg i 
   ==. (subString input i (stringLen tg)  == tg  

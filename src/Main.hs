@@ -11,8 +11,8 @@ main =
   do args      <- getArgs
      case args of 
        (i:j:fname:target:_) -> do input <- fromString <$> readFile fname
-                                  let parfactor = (read i :: Int ) 
-                                  let chunksize = (read j :: Int) 
+                                  let parfactor = (read i :: Integer ) 
+                                  let chunksize = (read j :: Integer) 
                                   if parfactor <= 0  || chunksize <= 0
                                     then putStrLn "Chunksize and Parallel Factor should be positive numbers" >> return ()
                                     else runMatching parfactor chunksize input target
