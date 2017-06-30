@@ -75,10 +75,10 @@ import System.CPUTime
 ------------ | String Matching Main Theorem  ----------------------------------
 -------------------------------------------------------------------------------
 
-{-@ correctness :: SM target -> is:RString  -> n:Int -> m:Int
+{-@ correctness :: SM target -> is:RString  -> n:Integer -> m:Integer
    -> {toSM is == toSMPar m n is } @-}
 
-correctness :: forall (target :: Symbol). (KnownSymbol target) => SM target -> RString -> Int -> Int -> Proof
+correctness :: forall (target :: Symbol). (KnownSymbol target) => SM target -> RString -> Integer -> Integer -> Proof
 correctness t is n m  
   =   (toSMPar m n is :: SM target)
   ==. toSM is 
@@ -92,7 +92,7 @@ correctness t is n m
 
 
 {-@ runMatching :: Pos -> Pos -> RString -> String -> IO () @-}
-runMatching :: Int -> Int -> RString -> String -> IO ()
+runMatching :: Integer -> Integer -> RString -> String -> IO ()
 runMatching parfactor chunksize input tg =
   case someSymbolVal tg of 
     SomeSymbol (_ :: Proxy target) -> do            
@@ -100,8 +100,8 @@ runMatching parfactor chunksize input tg =
       putStrLn   $ "Indices: " ++ show isPar
       exitSuccess 
 
-{-@ timeSeqStringMatching :: String -> String -> IO (Int, Double) @-}
-timeSeqStringMatching :: String -> String -> IO (Int, Double) 
+{-@ timeSeqStringMatching :: String -> String -> IO (Integer, Double) @-}
+timeSeqStringMatching :: String -> String -> IO (Integer, Double) 
 timeSeqStringMatching input tg = 
   case someSymbolVal tg of 
     SomeSymbol (_ :: Proxy target) -> do
@@ -111,8 +111,8 @@ timeSeqStringMatching input tg =
 
 
 
-{-@ timeParStringMatching :: Pos -> Pos -> String -> String -> IO (Int, Double) @-}
-timeParStringMatching :: Int -> Int -> String -> String -> IO (Int, Double) 
+{-@ timeParStringMatching :: Pos -> Pos -> String -> String -> IO (Integer, Double) @-}
+timeParStringMatching :: Integer -> Integer -> String -> String -> IO (Integer, Double) 
 timeParStringMatching parfactor chunksize input tg = 
   case someSymbolVal tg of 
     SomeSymbol (_ :: Proxy target) -> do
@@ -136,7 +136,7 @@ test1 = indicesSM (toSM (fromString "ababcabcab")  :: SM "abcab" )
 
 
 {-@ reflect toSMPar @-}
-toSMPar :: forall (target :: Symbol). (KnownSymbol target) => Int -> Int -> RString -> SM target  
+toSMPar :: forall (target :: Symbol). (KnownSymbol target) => Integer -> Integer -> RString -> SM target  
 toSMPar parfactor chunksize input 
 --   = pmconcat parfactor (map toSM (chunkString chunksize input))
    = pmconcat parfactor (withStrategy parStrategy (map toSM (chunkString chunksize input)))
