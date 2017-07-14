@@ -142,9 +142,9 @@ liquidFiles
 runLiquidProof :: ExitCode -> String -> IO ExitCode
 
 runLiquidProof i fm
-  = do pf <- runCommand' ("cd src; time stack exec -- liquid AutoProofs/" ++ fm ++ "> log 2>&1 ; cd ..")
+  = do -- TOO SLOW pf <- runCommand' ("cd src; time stack exec -- liquid AutoProofs/" ++ fm ++ "> log 2>&1 ; cd ..")
        af <- runCommand' ("cd src; time stack exec -- liquid Proofs/" ++ fm ++ "> log 2>&1 ; cd ..") 
-       return $ mconcat [i, pf, af]
+       return $ mconcat [i, af]
 {-   
   = do pf <- runCommand ("stack exec -- liquid Proofs/"     ++ fm) >>= waitForProcess
        ap <- runCommand ("stack exec -- liquid AutoProofs/" ++ fm) >>= waitForProcess
