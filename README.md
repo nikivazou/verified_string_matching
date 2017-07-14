@@ -1,3 +1,4 @@
-# Verified Parallel String Matching in using the (Liquid) Haskell theorem prover. 
+# A Tale of Two Provers:
+# Verifying Monoidal String Matching in Liquid Haskell and Coq
 
-See http://goto.ucsd.edu/~nvazou/papers/esop17.pdf for a description
+See https://nikivazou.github.io/static/Haskell17/a-tale.pdf for a description
